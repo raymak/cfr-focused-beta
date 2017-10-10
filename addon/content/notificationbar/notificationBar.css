@@ -1,0 +1,197 @@
+/* global variables */
+:root {
+  --primary-color: #f1f1f1;
+  --primary-text-color: #6f6f6f;
+  --link-text-color: #0094fb;
+  --primary-border-color: #b7b7b7;
+  --standard-box-shadow: 0 10px 20px rgba(50,50,93,.1),0 3px 7px rgba(50,50,93,.15),0 1px 3px rgba(0,0,0,.1);
+  --dropdown-box-shadow: 0 50px 100px rgba(50, 50, 93, .1), 0 15px 35px rgba(50, 50, 93, .15), 0 5px 15px rgba(0, 0, 0, .1);
+  --accept-button-background-color: #0093fa;
+  --accept-button-hover-background-color: #00329a;
+  --reject-button-background-color: #fbfbfb;
+  --reject-button-hover-background-color: #e1e1e2;
+}
+
+body {
+  margin: 0;
+  font-family: 'Arial';
+  color: var(--primary-text-color);
+}
+
+*::before, *::after, * {
+  box-sizing: border-box;
+}
+
+a {
+  color: var(--link-text-color);
+  text-decoration: none;
+}
+
+.notification-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: var(--primary-color);
+  border-bottom: 1px solid var(--primary-border-color);
+  box-shadow: var(--standard-box-shadow);
+}
+
+.notification-bar.hidden {
+  display: none;
+}
+
+.content-left-wrapper, .content-right-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+#message {
+  display: inline-block;
+  margin-left: 5px;
+}
+
+.link {
+  margin-left: 5px;
+}
+
+.button {
+  margin-left: 5px;
+  padding: 5px;
+  cursor: pointer;
+  color: var(--primary-text-color);
+}
+
+#primary-button {
+  color: white;
+  background-color: var(--accept-button-background-color);
+  border-color: #3085d2;
+}
+
+#primary-button:hover {
+  background-color: var(--accept-button-hover-background-color);
+}
+
+#primary-button.show-icon::before {
+  content: "";
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 8px;
+  height: 8px;
+  background-size: contain;
+  margin-right: 5px;
+  background-image: url(plus-sign.svg);
+}
+
+#primary-button::before.hidden {
+  display: none;
+}
+
+.secondary-button-wrapper {
+  display: flex;
+}
+
+#secondary-button {
+  background-color: var(--reject-button-background-color);
+  border-right-color: rgba(0, 0, 0, .2);
+}
+
+#secondary-button:hover, #secondary-button-show-dropdown:hover {
+  background-color: var(--reject-button-hover-background-color);
+}
+
+#secondary-button-show-dropdown {
+  position: relative;
+  margin: 0;
+  /* From: resource://gre-resources/forms.css in Firefox URL bar*/
+  border: 2px outset ThreeDLightShadow;
+  border-left-width: 0;
+  align-self: stretch;
+  background-color: var(--reject-button-background-color);
+}
+
+#secondary-button-show-dropdown:active {
+  border-style: inset;
+}
+
+#secondary-button-show-dropdown::after {
+  content: "";
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 10px;
+  height: 10px;
+  background-size: contain;
+  background-image: url(down-arrow.svg);
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translate(-50%, 15px);
+  min-width: 200px;
+  visibility: visible;
+  margin: 0 auto;
+  opacity: 1;
+  transition: opacity 0.5s;
+  flex-flow: column wrap;
+  padding: 0;
+  margin: 0;
+  text-align: start;
+  list-style: none;
+  box-shadow: var(--dropdown-box-shadow);
+}
+
+.dropdown::before {
+  position: absolute;
+  left: 50%;
+  top: 0%;
+  transform: translate(-50%, -10px);
+  width: 0;
+  height: 0;
+  content:'';
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid var(--reject-button-background-color);
+}
+
+.dropdown-item {
+  padding: 10px;
+  border-bottom: 1px solid var(--primary-border-color);
+  background-color: var(--reject-button-background-color);
+  transition: background-color 0.5s;
+}
+
+.dropdown-item:last-child {
+  border: 0;
+}
+
+.dropdown-item:hover {
+  background-color: var(--reject-button-hover-background-color);
+}
+
+.hidden {
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0s linear 0.5s, opacity 0.5s;
+}
+
+#icon {
+  width: 25px;
+}
+
+label, .link {
+  font-size: .75em;
+}
+
+.star-rating, #additional-info, #close-icon {
+  margin-left: 10px;
+}
+
+#close-icon {
+  fill: var(--primary-text-color);
+  width: 10px;
+  cursor: pointer;
+}

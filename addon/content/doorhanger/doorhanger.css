@@ -1,0 +1,555 @@
+/*! This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+  /* mostly from https://github.com/johngruen/project-dfa/tree/master/src */
+body {
+  color: #333333;
+  background: transparent;
+  font-family: "FiraSans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+   }
+
+/*=====MINIMAL RESETS, ADJUSTMENTS, ETC =====*/
+h1, h2, h3, h4, h5, h6 {
+  color: #424f5a;
+}
+
+h1, h2, h3 {
+  /*padding-bottom:20px;
+  margin-bottom: 1em;*/ 
+}
+
+h4, h5, h6 {
+  margin-bottom: 1.66em; 
+}
+
+h1, h2 {
+  font-family: "FiraSans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+h3, h4, h5, h6 {
+  font-family: 'clear_sansregular';
+}
+
+ul, ol, p {
+  line-height: 20px;
+  margin: .5em 0 0em 0; 
+}
+
+/* specific heights we like */
+
+h1 {
+  font-size:15px;
+}
+
+p {
+  /*font-size:15px;*/
+}
+
+/*div {border: solid 1px black}*/
+body {
+  /*position: relative;*/
+  width: 350px;
+  /*left: -10px;
+  top: -10px;*/
+  padding: 0 0;
+  margin: 0 0;
+  /*overflow: hidden;*/
+  
+}
+
+#topbar {
+  height: 20px; /*10%*/
+  margin-bottom: 5px;
+}
+
+#topbar:hover > #top-left-links {
+  opacity: 1;
+}
+
+#top-left-links {
+  opacity: 0;
+  margin-top: 6px;
+  margin-left: 10px;
+  font-size: 11px;
+  float: left;
+  display: inline;
+  transition: opacity 0.5s cubic-bezier(0.05,0.27,0.27,1) 0s;
+}
+
+
+#top-left-links.visible {
+  opacity: 1;
+}
+
+.top-left-link:hover {
+  text-decoration: underline;
+  color: rgba(10, 10, 10,  0.9);
+
+}
+
+.top-left-link.active { 
+  text-decoration: none !important;
+  color: black !important;
+  transition: color 0.5s;
+  cursor: default;
+  font-weight: bold;
+}
+
+.top-left-link {
+  color: rgba(34, 34, 34, 0.69);
+  text-decoration: none;
+}
+
+#interpunct {
+  color: #3FB8E8;
+  font-size: 8px;
+  padding-right: 3px;
+  padding-left: 3px;
+}
+
+#interpunct.invisible {
+  visibility: hidden;
+}
+
+#neg-feedback {
+  transition: color 0.5s;
+}
+
+#neg-feedback.active {
+  color: black;
+  text-decoration: none !important;
+}
+
+#neg-feedback.checked {
+  color: black;
+  font-weight: 600;
+}
+
+
+#info-page.invisible {
+  visibility: hidden;
+}
+
+#close-button {
+  margin-top: 5px;
+  margin-right: 5px;
+  float:right;
+  color: #aaa;
+  cursor: default;
+  font-size: 17px;
+  border-radius: 20%;
+  background-image: url(../images/close@2x.png);
+  background-position: 0 0;
+  background-size: 64px 16px;
+  height: 16px;
+  width: 16px;
+}
+
+#close-button:hover {
+  background-image: url(../images/close@2x.png);
+  background-position: 48px 0;
+  
+}
+
+#close-button:hover:active {
+  background-image: url(../images/close@2x.png);
+  background-position: 32px 0;
+}
+
+#topsection {
+  display:flex;
+  padding-right: 10px;
+  margin-bottom: 15px;
+  min-height: 112px;
+}
+
+#recomcontainer {
+  transition: opacity 0.5s visibility 0s ease 0.5s;
+  opacity: 1;
+}
+
+#recomcontainer-top {
+  display: flex;
+}
+
+#recomcontainer-bottom {
+  display:flex;
+  margin-top: 5px;
+}
+
+#recommcontainer.invisible {
+  visibility: hidden;
+  opacity: 0;
+}
+
+#picture {
+  /*position: absolute;*/
+  width: 30%;
+  text-align: center;
+  
+}
+#icon {
+  margin-top: 5px;
+  max-width: 64px;
+  max-height: 64px;
+  width: auto;
+  height: auto;
+
+}
+
+#likesection {
+  font-size: 12px;
+  position: relative;
+  width: 30%;
+  visibility: hidden;
+}
+
+#like-smiley {
+  margin-left: 21px;
+  background-image: url("images/sprites.png");
+  height: 20px;
+  width: 16px;
+  background-size: 16px 40px;
+  background-position: 0px 20px;
+  display: inline-block;
+
+}
+
+#likesection.checked #like-smiley {
+  background-image: url('images/sprites-checked.png');
+}
+
+#like {
+  display: inline;
+  vertical-align: top;
+  position: relative;
+  top: 3px;
+  cursor: pointer;
+  color: #666565;
+}
+
+#like:hover {
+  color: black;
+}
+
+#likesection.checked #like{
+  font-weight: bold;
+  color: black;
+}
+
+#likesection.checked #like::after{
+  content: "d";
+}
+
+#textsection {
+  width: 70%;
+}
+ 
+#header {
+  text-align: left;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  /*top: -5px;*/
+  /*position: relative;*/
+  /*font-family: 'Lucida Grande', 'Helvetica Neue', Helvetica, sans-serif;*/
+  font-family: "FiraSans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    /*border: solid 1px black;*/
+
+}
+
+#messagesection {
+  text-align: left;
+  font-family:  "FiraSans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+}
+
+#messagesection .key {
+  font-family: monospace;
+  padding: 1px 4px;
+  background: transparent linear-gradient(to bottom, #F0F0F0, #FCFCFC) repeat scroll 0% 0%;
+  border-radius: 3px;
+  color: #303030;
+  border-width: 1px 1px 2px;
+  border-style: solid;
+  border-color: #E0E0E0;
+  -moz-border-top-colors: none;
+  -moz-border-right-colors: none;
+  -moz-border-bottom-colors: none;
+  -moz-border-left-colors: none;
+  border-image: none;
+  white-space: nowrap;
+}
+
+#bottomsection {
+  /*position: relative;   */
+  background-color: rgba(0, 0, 0, 0.06);
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
+  color: #1a1a1a;
+  display: flex;
+  flex-direction: row;
+  height: 41px;
+  margin-top: -1px;
+  padding: 0;
+}
+
+#rationalecontainer {
+  width:70%;
+  margin-top: 2px;
+}
+
+#clickarea {
+  width: 75px;
+}
+
+.open #clickarea {
+  cursor: pointer;
+}
+
+#rationaleopener {
+  color: #666565;
+  cursor: default;
+  font-size: 12px;
+  text-decoration: none;
+
+}
+
+.open #rationaleopener {
+  cursor: pointer;
+}
+
+#triangle {
+  opacity: 0.5;
+  width: 7px;
+  transition: transform 0.2s;
+}
+
+.open #triangle {
+  opacity: 1;
+  cursor: pointer;
+  transform: rotate(90deg);
+}
+
+#rationalesection {
+  /*display:none;*/
+  max-height: 0px;
+  opacity: 0;
+  transition: opacity 0.3s ease 0.2s;
+  overflow:hidden;
+  color: #666565;
+}
+
+#rationalesection.visible {
+  /*display: block;*/
+  max-height: 60px;
+  /*margin-bottom: 15px;*/
+  opacity: 1;
+}
+
+#rationalesection p {
+  font-size: 12px;
+  line-height: 14px;
+  margin-top: 0px;
+  padding-top: 2px;
+}
+
+#radiosection {
+  font-size: 13px;
+}
+
+#radiosection * {
+  cursor: pointer;
+  padding: 0 0;
+}
+
+#radiosection label {
+  padding: 2px 0px;
+}
+
+#feedbackcontainer {
+  display:block;
+  margin-left: 20px;
+  position:absolute;
+  left: 0;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+
+#feedbackcontainer.visible {
+  visibility: visible;
+  opacity: 1;
+}
+
+#apologysection {
+  font-size: 13px;
+  margin-bottom: 5px;
+  margin-top: 5px;
+}
+
+/* radio button style from http://code.stephenmorley.org/html-and-css/styling-checkboxes-and-radio-buttons/ */
+
+input[type=checkbox]:not(old),
+input[type=radio]:not(old) {
+  width     : 2em;
+  margin    : 0;
+  padding   : 0;
+  font-size : 1em;
+  opacity   : 0;
+}
+
+input[type=checkbox]:not(old) + label,
+input[type=radio]:not(old) + label {
+  display      : inline-block;
+  margin-left  : -2em;
+  line-height  : 1.5em;
+}
+
+input[type=checkbox]:not(old) + label > span,
+input[type=radio   ]:not(old) + label > span{
+  display          : inline-block;
+  width            : 0.875em;
+  height           : 0.875em;
+  margin           : 0 0.5em 0.25em 0.25em;
+  border           : 0.0625em solid rgb(192,192,192);
+  border-radius    : 0.25em;
+  background       : rgb(224,224,224);
+  background-image :         linear-gradient(rgb(240,240,240),rgb(224,224,224));
+  vertical-align   : bottom;
+}
+
+/*input[type=checkbox]:not(old):checked + label > span > span{
+  display          : block;
+  width            : 100%;
+  height           : 100%;
+  margin           : 0.125em;
+  border           : 0.0625em solid rgb(115,153,77);
+  border-radius    : 0.125em;
+  background       : linear-gradient(#8CD9D9, #66C1CC) repeat scroll 0% 0% #6CC;
+}*/
+
+input[type=checkbox]:not(old):checked + label > span:before{
+  content     : '\2713';
+  display     : block;
+  width       : 1em;
+  color       : #30A3C9;
+  font-size   : 0.875em;
+  line-height : 1em;
+  text-align  : center;
+  text-shadow : 0 0 0.0714em rgb(115,153,77);
+  font-weight : bold;
+}
+
+#choice5 {
+  margin-top: 10px;
+}
+
+
+
+#thankscontainer {
+  font-size: 15px;
+  display:block;
+  margin-left: 20px;
+  position:absolute;
+  left: 0;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+
+#thankscontainer.visible {
+  visibility: visible;
+  opacity: 1;
+}
+
+#thankscontainer p {
+  text-align: center;
+  vertical-align: middle;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#tp-logo {
+  height: 110px;
+  margin-top: 5px;
+  margin-left: 60px;
+}
+
+#whylabel {
+  font-variant: small-caps; 
+  text-transform: lowercase;
+}
+
+#button-container.feedback {
+  float: none;
+  width: auto;
+  margin-left: 20px;
+}
+
+.button-style {
+  /*font-family: 'Helvetica Neue', Helvetica, sans-serif;*/
+  font-size: 12px;
+  line-height: 0px;
+  display: inline-block;
+  text-align: center;
+  cursor: pointer;
+  /* font-weight: bold; */
+  /*text-shadow: 0px 1px rgba(0, 0, 0, 0.3);*/
+  color: #FFF;
+  background-color: #0996f8;
+  box-shadow: 0 1px 0 #0670cc inset;
+  border-style: solid;
+  border-width: 1px;
+  border-color: transparent;
+  flex: 1 1 auto;
+  height: 100%;
+  margin: -1px -0px;
+  padding: 12px;
+  text-align: center;
+}
+
+.button-style:hover {
+  background-color: #0670cc;
+  box-shadow: 0 1px 0 #005bab inset;
+}
+
+.button-style:hover:active {
+  background-color: #005bab;
+  box-shadow: 0 1px 0 #004480 inset;
+}
+
+.button-style.invisible { 
+  display: none;
+}
+
+.button-style.disabled {
+  display:none;
+}
+
+.button-style.feedback {
+  width: auto;
+  visibility: visible;
+}
+
+#sec-button {
+  background-color: #ebebeb;
+  color: black;
+  border-color: transparent;
+  text-align: center;
+  box-shadow: 0 1px 0 #d4d4d4 inset;
+}
+
+#sec-button:hover {
+  background-color: #d4d4d4;
+  box-shadow: 0 1px 0 #b1b1b1 inset;
+}
+
+#sec-button:hover:active {
+  background-color: #b1b1b1;
+  box-shadow: 0 1px 0 #858585 inset;
+}

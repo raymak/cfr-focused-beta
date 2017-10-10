@@ -1,0 +1,10 @@
+{
+	"background": {
+		"scripts": ["background/main.js"]
+	},
+	"description": "Companion webextension to the Focused CFR Shield study.",
+	"manifest_version": 2,
+	"name": "Focused CFR",
+	"permissions": ["management", "*://*.mozilla.org/*", "webNavigation", "tabs", "alarms", "storage"],
+	"version": "0.1"
+}

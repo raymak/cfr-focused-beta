@@ -1,0 +1,37 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="recipe.js"></script>
+    <link rel="stylesheet" href="notificationBar.css" type="text/css">
+  </head>
+  <body>
+    <div id="notification-bar" class="notification-bar">
+      <div class="content-left-wrapper">
+        <img id="icon" src="" alt="">
+        <img id="rating-left" class="star-rating" src="" alt=""> 
+        <p id="message"></p>
+        <a id="link-middle" class="link" href="" target="_blank"></a>
+        <img id="rating-middle" class="star-rating" src="" alt=""> 
+        <button id="primary-button" class="button"></button>
+        <div class="secondary-button-wrapper">
+          <button id="secondary-button" class="button"></button>
+          <!-- You cannot have a <ul> element (i.e. block element) nested inside a <button> (i.e. inline element) -->
+          <div id="secondary-button-show-dropdown" class="button" title="Don't show me this again">
+            <ul id="dropdown-menu" class="dropdown hidden">
+            </ul>
+          </div>
+        </div>
+      </div>
+      <span class="content-right-wrapper">
+        <img id="rating-right" class="star-rating" src="" alt=""> 
+        <a id="link-right" class="link" href=""></a>
+        <p id="additional-info"></p>
+        <input id="checkbox" type="checkbox">
+        <label id="checkbox-label" for="checkbox"></label>
+        <svg id="close-icon" aria-label="close" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 21.9 21.9" xmlns:xlink="http://www.w3.org/1999/xlink" enable-background="new 0 0 21.9 21.9">
+          <path d="M14.1,11.3c-0.2-0.2-0.2-0.5,0-0.7l7.5-7.5c0.2-0.2,0.3-0.5,0.3-0.7s-0.1-0.5-0.3-0.7l-1.4-1.4C20,0.1,19.7,0,19.5,0  c-0.3,0-0.5,0.1-0.7,0.3l-7.5,7.5c-0.2,0.2-0.5,0.2-0.7,0L3.1,0.3C2.9,0.1,2.6,0,2.4,0S1.9,0.1,1.7,0.3L0.3,1.7C0.1,1.9,0,2.2,0,2.4  s0.1,0.5,0.3,0.7l7.5,7.5c0.2,0.2,0.2,0.5,0,0.7l-7.5,7.5C0.1,19,0,19.3,0,19.5s0.1,0.5,0.3,0.7l1.4,1.4c0.2,0.2,0.5,0.3,0.7,0.3  s0.5-0.1,0.7-0.3l7.5-7.5c0.2-0.2,0.5-0.2,0.7,0l7.5,7.5c0.2,0.2,0.5,0.3,0.7,0.3s0.5-0.1,0.7-0.3l1.4-1.4c0.2-0.2,0.3-0.5,0.3-0.7  s-0.1-0.5-0.3-0.7L14.1,11.3z"/>
+        </svg>
+        </span>
+    </div>
+  </body>
+</html>

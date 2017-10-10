@@ -1,0 +1,87 @@
+<!-- * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE HTML>
+
+<html>
+  
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <link  rel="stylesheet" type="text/css" href="./doorhanger.css" />
+  </head>
+
+
+  <body>
+    <div id="topbar">
+      <div id="top-left-links">
+        <a href="#" id="info-page" class="top-left-link"> what's this? </a>
+      </div>  
+      <div id="close-button">
+      </div>
+    </div>
+
+    <div id="topsection">
+      <div id="recommcontainer">
+        <div id="recomcontainer-top">
+          <div id="picture">
+            <img id="icon" src="../images/firefox-highres.png" />
+          </div>
+
+          <div id="textsection">
+            <div id="messagesection">
+              <h1 id="header"> Recommendation for you </h1>
+
+              <p id="textbox"> <span id="addonname">Some Addon </span> can help you do what you want to do more efficiently. Try it to see for yourself! </p>
+              
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="feedbackcontainer">
+        <div id="apologysection">
+          Oops! Can you tell us why?
+        </div>
+        <div id="radiosection">
+          <form id="feedback-form" action="">
+          <div id="r1">
+            <input id="choice1" type="checkbox" name="negfb" value="irrelevant" />
+            <label for="choice1"><span><span></span></span>It is irrelevant to me</label><br>
+          </div>
+          <div id="r2">
+            <input id="choice2" type="checkbox" name="negfb" value="tried" />
+            <label for="choice2"><span><span></span></span>I've tried and don't like it</label><br>
+          </div>
+          <div id="r3">
+            <input id="choice3" type="checkbox" name="negfb" value="use" />
+            <label for="choice3"><span><span></span></span>I already use it</label><br>
+          </div>
+           <div id="r4">
+            <input id="choice4" type="checkbox" name="negfb" value="use" />
+            <label for="choice4"><span><span></span></span>I use a similar feature</label><br>
+          </div>
+          <div id="r5">
+            <input id="choice5" type="checkbox" name="negfb" value="interrupted" />
+            <label for="choice5"><span><span></span></span>I was interrupted</label><br>
+          </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="thankscontainer">
+        <p> Thanks for your feedback! </p>
+        <div class="tp-logo">
+          <img id="tp-logo" src="images/tp-logo.png" />
+        </div>
+      </div>
+
+    </div>
+
+    <div id="bottomsection">
+      <button id="sec-button" class="button-style">Secondary</button>
+      <button id="prim-button" class="button-style">Primary</button>
+    </div>
+
+  </body>
+</html>
