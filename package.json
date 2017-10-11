@@ -26,7 +26,7 @@
     "shield-studies-addon-utils": "^4.0.0"
   },
   "addon": {
-    "version": "1.0.0",
+    "version": "1.0.1",
     "id": "focused-cfr-shield-study@mozilla.com",
     "name": "Focused Contextual Feature Recommender Shield Study",
     "minVersion": "55.0",
@@ -34,7 +34,7 @@
     "multiprocessCompatible": true,
     "hasEmbeddedWebExtension": false,
     "creator": "Kamyar Ardekani <kardekani@mozilla.com>",
-    "description": "Shield-powered Contextual Feature Recommender Study",
+    "description": "Shield-powered Contextual Feature Recommender Study. For more info visit http://github.com/raymak/cfr-focused-beta.",
     "chrome": "focused-cfr-shield-study"
   },
   "dependencies": {}
