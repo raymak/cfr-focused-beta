@@ -13,10 +13,10 @@ Cu.import("resource://gre/modules/Timer.jsm");
 
 const DEBUG_MODE_PREF = "extensions.focused_cfr_debug_mode";
 
-const log = function(...args){
+const log = function(...args) {
   if (!Preferences.get(DEBUG_MODE_PREF)) return;
   console.log(...args);
-}
+};
 
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow", "resource:///modules/RecentWindow.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences", "resource://gre/modules/Preferences.jsm");
@@ -27,7 +27,7 @@ const MESSAGES = [
   "FocusedCFR::dismiss",
   "FocusedCFR::close",
   "FocusedCFR::action",
-  "FocusedCFR::timeout"
+  "FocusedCFR::timeout",
 ];
 
 this.EXPORTED_SYMBOLS = ["NotificationBar"];
@@ -132,8 +132,8 @@ class NotificationBar {
       case "FocusedCFR::timeout":
         this.killNotification();
         this.messageListenerCallback(message);
-        break; 
-        
+        break;
+
       default:
         this.messageListenerCallback(message);
 

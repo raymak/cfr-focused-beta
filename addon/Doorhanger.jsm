@@ -16,10 +16,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "Preferences", "resource://gre/modules/P
 
 const DEBUG_MODE_PREF = "extensions.focused_cfr_debug_mode";
 
-const log = function(...args){
+const log = function(...args) {
   if (!Preferences.get(DEBUG_MODE_PREF)) return;
   console.log(...args);
-}
+};
 
 const MESSAGES = [
   "FocusedCFR::log",
@@ -27,7 +27,7 @@ const MESSAGES = [
   "FocusedCFR::dismiss",
   "FocusedCFR::close",
   "FocusedCFR::action",
-  "FocusedCFR::timeout"
+  "FocusedCFR::timeout",
 ];
 
 this.EXPORTED_SYMBOLS = ["Doorhanger"];
@@ -143,14 +143,14 @@ class Doorhanger {
       case "FocusedCFR::timeout":
         this.killNotification();
         this.messageListenerCallback(message);
-        break; 
+        break;
 
       default:
         this.messageListenerCallback(message);
     }
   }
 
-  shutdown(){
+  shutdown() {
     this.killNotification();
   }
 }

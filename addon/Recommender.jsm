@@ -17,6 +17,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "NotificationBar", "resource://focused-c
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences", "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Bookmarks", "resource://gre/modules/Bookmarks.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow", "resource:///modules/RecentWindow.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 
 const bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"]
                       .getService(Components.interfaces.nsINavBookmarksService);
@@ -49,6 +50,7 @@ const POCKET_BOOKMARK_COUNT_TRHESHOLD = 15;
 const AMAZON_VISIT_THRESHOLD = 3;
 
 const AMAZON_LINK = "www.amazon.com/gp/BIT/ref=bit_v2_BDFF1?tagbase=mozilla1";
+const AMAZON_ADDON_ID = "abb@amazon.com";
 
 this.EXPORTED_SYMBOLS = ["Recommender"];
 
@@ -57,6 +59,7 @@ const log = console.log; // Temporary
 let bookmarkObserver;
 let currentId;
 let windowListener;
+let addonListener;
 
 const recipes = {
   "amazon-assistant": {
@@ -92,7 +95,7 @@ const recipes = {
   },
   "pocket": {
     message: {
-      text: "You might like Pocket, which lets you save for later articles, videos, or pretty much anything!",
+      text: "Pocket lets you save for later articles, videos, or pretty much anything!",
       link: {
         text: "Pocket",
         url: "https://getpocket.com/firefox/",
@@ -128,7 +131,8 @@ class Recommender {
 
   test() {
     currentId = "pocket";
-    (new Doorhanger(recipes[currentId], this.presentationMessageListener.bind(this))).present();
+    (new NotificationBar(recipes[currentId], this.presentationMessageListener.bind(this))).present();
+    setInterval(()=>Utils.printStorage(), 10000);
   }
 
   async start() {
@@ -139,9 +143,11 @@ class Recommender {
       await this.firstRun();
 
     Utils.printStorage();
+
     await this.listenForMobilePromoTrigger();
     await this.listenForPageViews();
     await this.listenForBookmarks();
+    await this.listenForAddonInstalls();
 
     await this.reportSummary();
   }
@@ -170,6 +176,8 @@ class Recommender {
     Preferences.set(DEBUG_MODE_PREF, false);
 
     Preferences.set(INIT_PREF, true);
+
+    this.checkForAmazonPreuse();
   }
 
   async reportSummary() {
@@ -182,43 +190,47 @@ class Recommender {
     };
 
     data = Object.assign({}, data, logs);
-    log(`summary report: ${data}`);
+    log(`summary report`, data);
     this.telemetry(data);
   }
 
   async reportEvent(id, event) {
-    let data = {
+    const data = {
       "message_type": "event",
       "variation": this.variation,
       "variation_ui": this.variationUi,
       "variation_amazon": this.variationAmazon,
       "id": id,
-      "event": event
+      "event": event,
     };
-    log(`event report: ${data}`);
-    this.telemetry(data)
+    log(`event report:`, data);
+    this.telemetry(data);
   }
 
   async reportNotificationResult(result) {
     const recomm = await Storage.get(`recomms.${currentId}`);
 
-    let data = {
+    const data = {
       "message_type": "notification_result",
       "variation": this.variation,
       "variation_ui": this.variationUi,
       "variation_amazon": this.variationAmazon,
-      "count": recomm.presentation.count,
-      "status": recomm.presentation.status,
+      "count": String(recomm.presentation.count),
+      "status": recomm.status,
       "id": currentId,
-      "result": result
-    }
+      "result": result,
+    };
+
+    log("notification result: ", data);
 
     Utils.printStorage();
     this.telemetry(data);
   }
 
   async updateLog(attribute, value) {
-    return Storage.update("logs", {attribute: String(value)});
+    const obj = {};
+    obj[attribute] = String(value);
+    return Storage.update("logs", obj);
   }
 
   async updateLogWithId(id, attribute, value) {
@@ -244,10 +256,10 @@ class Recommender {
       "pocket_close": "false",
       "pocket_dismiss": "false",
       "pocket_nevershow": "false",
-      "pocket_timeout": "false"
+      "pocket_timeout": "false",
     };
 
-    Storage.set("logs", logs);
+    await Storage.set("logs", logs);
   }
 
   async initRecommendations() {
@@ -279,6 +291,7 @@ class Recommender {
       status: "waiting",
       presentation: {
         count: 0,
+        never: false
       },
     };
 
@@ -289,12 +302,62 @@ class Recommender {
     await Storage.set("recomms.pocket", pocket);
   }
 
+  async checkForAmazonPreuse() {
+    const addon = await AddonManager.getAddonByID(AMAZON_ADDON_ID);
+
+    if (!addon) {
+      log(`no Amazon preuse`);
+      return;
+    }
+
+    // preuse
+    const recomm = await Storage.get("recomms.amazon-assistant");
+    recomm.status = "preused";
+    log("amazon preused");
+    this.reportEvent("amazon-assistant", "preused");
+    await Storage.update("recomms.amazon-assistant", recomm);
+  }
+
+  listenForAddonInstalls() {
+
+    const that = this;
+
+    addonListener = {
+      async onInstalled(addon) {
+        if (addon.id === AMAZON_ADDON_ID) {
+          log("Amazon addon installed");
+
+          that.reportEvent("amazon-assistant", "addon_install");
+
+          const recomm = await Storage.get("recomms.amazon-assistant");
+
+          if (recomm.status === "waiting" || recomm.status === "queued") {
+            recomm.status = "preused";
+            log("amazon preused");
+            that.reportEvent("amazon-assistant", "preused");
+          } else {
+            recomm.status = "postused";
+            log("amazon postused");
+            that.reportEvent("amazon-assistant", "postused");
+          }
+
+          await Storage.update("recomms.amazon-assistant", recomm);
+        }
+      },
+    };
+
+    AddonManager.addAddonListener(addonListener);
+  }
+
   async checkForAmazonVisit(hostname) {
     if (!AMAZON_AFFILIATIONS.includes(hostname)) return;
 
     const data = await Storage.get("recomms.amazon-assistant");
 
-    if (Date.now() - data.trigger.lastVisit < Preferences.get(PAGE_VISIT_GAP_PREF) * 60 * 1000) return;
+    if (Date.now() - data.trigger.lastVisit < Preferences.get(PAGE_VISIT_GAP_PREF) * 60 * 1000) {
+      log(`not counted as a new amazon visit, last visit difference: ${(Date.now() - data.trigger.lastVisit) / (1000)} seconds ago`);
+      return;
+    }
 
     log("amazon assistant visit");
 
@@ -316,6 +379,7 @@ class Recommender {
     const that = this;
     async function checkThreshold() {
       const bookmarkCount = (await Bookmarks.getRecent(100)).length;
+      that.reportEvent("bookmark-count", `${bookmarkCount}`);
       log(`bookmark count: ${bookmarkCount}`);
       const threshold = Preferences.get(POCKET_BOOKMARK_COUNT_PREF);
       if (bookmarkCount > threshold) {
@@ -463,7 +527,7 @@ class Recommender {
 
     log(`queueing recommendation ${id}$`);
     await Storage.update(`recomms.${id}`, {status: `queued`});
-    reportEvent(id, "queued");
+    this.reportEvent(id, "queued");
   }
 
   async presentRecommendation(id) {
@@ -475,7 +539,7 @@ class Recommender {
 
     log(recomm);
 
-    if (recomm.status === "waiting" || recomm.status === "action") return;
+    if (recomm.status === "waiting" || recomm.status === "action" || recomm.status === "preused" || recomm.status == "postused") return;
     if (recomm.presentation.count >= Preferences.get(MAX_NUMBER_OF_NOTIFICATIONS_PREF)) {
       log(`max number of notifications delivered for ${id}`);
       return;
@@ -496,12 +560,12 @@ class Recommender {
     const recommRecipe = recipes[id];
     currentId = id;
 
-    if (this.variationUi === "doorhanger"){
+    if (this.variationUi === "doorhanger") {
       doorhanger = new Doorhanger(recommRecipe, this.presentationMessageListener.bind(this));
       doorhanger.present();
     }
 
-    if (this.variationUi === "bar"){
+    if (this.variationUi === "bar") {
       notificationBar = new NotificationBar(recommRecipe, this.presentationMessageListener.bind(this));
       notificationBar.present();
     }
@@ -509,7 +573,7 @@ class Recommender {
     recomm.status = "presented";
     recomm.presentation.count += 1;
 
-    await Storage.update("general", {lastNotification: Date.now()})
+    await Storage.update("general", {lastNotification: Date.now()});
 
     await this.updateLogWithId(id, "delivered", "true");
 
@@ -521,9 +585,9 @@ class Recommender {
 
   async neverShow(id) {
     const recomm = await Storage.get(`recomms.${id}`);
-    recomm.presentation.nevershow = true;
+    recomm.presentation.never = true;
     await Storage.update(`recomms.${id}`, recomm);
-    reportEvent(id, "nevershow");
+    this.reportEvent(id, "nevershow");
   }
 
   async presentationMessageListener(message) {
@@ -537,7 +601,7 @@ class Recommender {
         break;
       case "FocusedCFR::dismiss":
         await this.updateLogWithId(currentId, "dismiss", "true");
-        if (message.data == true) {
+        if (message.data === true) {
           await this.updateLogWithId(currentId, "nevershow", "true");
           await this.neverShow(currentId);
         }
@@ -547,7 +611,7 @@ class Recommender {
 
       case "FocusedCFR::timeout":
         await this.updateLogWithId(currentId, "timeout", "true");
-        if (message.data == true) {
+        if (message.data === true) {
           await this.updateLogWithId(currentId, "nevershow", "true");
           await this.neverShow(currentId);
         }
@@ -565,18 +629,18 @@ class Recommender {
 
       case "FocusedCFR::close":
         await this.updateLogWithId(currentId, "close", "true");
-        if (message.data == true) {
+        if (message.data === true) {
           await this.updateLogWithId(currentId, "nevershow", "true");
           await this.neverShow(currentId);
         }
         await this.reportSummary();
-        await this.reportNotificationResult("close")
+        await this.reportNotificationResult("close");
         break;
     }
   }
 
-  shutdown(){
-    bmsv.removeObserver(bookmarkObserver);
+  shutdown() {
+    bmsvc.removeObserver(bookmarkObserver);
     if (doorhanger) {
       doorhanger.shutdown();
     }
@@ -584,7 +648,10 @@ class Recommender {
       notificationBar.shutdown();
     }
     if (windowListener) {
-      Services.wm.removeListener(windowLister);
+      Services.wm.removeListener(windowListener);
+    }
+    if (addonListener) {
+      AddonManager.removeAddonListener(addonListener);
     }
 
     Cu.unload("resource://focused-cfr-shield-study/Doorhanger.jsm");
@@ -595,6 +662,6 @@ class Recommender {
 
 const Utils = {
   async printStorage() {
-    return Storage.getAll().then(log);
+    return Storage.getAll().then((...args) => { log("Storage contents: ", ...args); });
   },
 };

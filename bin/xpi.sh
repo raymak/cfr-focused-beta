@@ -32,6 +32,7 @@ echo "$DEST"
 pushd "$DEST"
 zip -r "$DEST/${XPI_NAME}" *
 mkdir -p "$BASE_DIR/dist"
+cp "${XPI_NAME}" "$BASE_DIR/dist/$XPI_STATIC_NAME"
 mv "${XPI_NAME}" "$BASE_DIR/dist"
 echo "xpi at ${BASE_DIR}/dist/${XPI_NAME}"
 popd
