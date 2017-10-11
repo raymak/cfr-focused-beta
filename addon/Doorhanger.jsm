@@ -21,6 +21,8 @@ const log = function(...args) {
   console.log(...args);
 };
 
+let panel;
+
 const MESSAGES = [
   "FocusedCFR::log",
   "FocusedCFR::openUrl",
@@ -28,6 +30,7 @@ const MESSAGES = [
   "FocusedCFR::close",
   "FocusedCFR::action",
   "FocusedCFR::timeout",
+  "FocusedCFR::resize"
 ];
 
 this.EXPORTED_SYMBOLS = ["Doorhanger"];
@@ -57,7 +60,7 @@ class Doorhanger {
   }
 
   show(win) {
-    let panel = win.document.getElementById("focused-cfr-doorhanger-panel");
+    panel = win.document.getElementById("focused-cfr-doorhanger-panel");
 
     const popAnchor = this.determineAnchorElement(win);
 
@@ -168,6 +171,10 @@ class Doorhanger {
         this.killNotification();
         this.messageListenerCallback(message);
         break;
+
+      case "FocusedCFR::resize":
+        log('updating panel size to :', message.data);
+        panel.sizeTo(message.data.width+3, message.data.height+21)
 
       default:
         this.messageListenerCallback(message);

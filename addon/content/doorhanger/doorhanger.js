@@ -84,6 +84,8 @@ function load(data) {
 
   registerExternalLinks();
 
+  updatePanelSize();
+  
   timeoutTimer = content.setTimeout(timeout, 2 * 60 * 1000);
 }
 
@@ -127,8 +129,8 @@ function changeBodySize(panelSize) {
 }
 
 function updatePanelSize(width, height) {
-  self.port.emit("resize", {height: height || Number(getComputedStyle(document.body).height.slice(0, -2)),
-    width: width || Number(getComputedStyle(document.body).width.slice(0, -2))});
+  self.port.emit("FocusedCFR::resize", {height: height || Number(content.getComputedStyle(document.body).height.slice(0, -2)),
+    width: width || Number(content.getComputedStyle(document.body).width.slice(0, -2))});
 }
 
 function toggleCheckbox() {

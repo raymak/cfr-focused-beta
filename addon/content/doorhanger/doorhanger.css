@@ -79,6 +79,9 @@ body {
   visibility: hidden;
 }
 
+a {
+  text-decoration: none;
+}
 
 #top-left-links.visible {
   opacity: 1;
