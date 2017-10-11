@@ -394,7 +394,7 @@ class Recommender {
     bookmarkObserver = {
       onItemAdded: (aItemId, aParentId, aIndex, aItemType, aURI, aTitle,
                     aDateAdded, aGuid, aParentGuid) => {
-        console.log("bookmark added");
+        log("bookmark added");
 
         checkThreshold().then(() => this.presentRecommendation("pocket"));
       },
