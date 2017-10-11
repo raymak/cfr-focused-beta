@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Recommender", "resource://focused-cfr-s
 
 let recommender;
 
-function telemetry(data){
+function telemetry(data) {
   studyUtils.telemetry(data);
 }
 
@@ -75,6 +75,8 @@ function shutdown(addonData, reason) {
 
   // normal shutdown, or 2nd attempts
     console.log("Jsms unloading");
+    recommender.shutdown();
+    Cu.unload("resource://focused-cfr-shield-study/Recommender.jsm");
     Jsm.unload(config.modules);
     Jsm.unload([CONFIGPATH, STUDYUTILSPATH]);
   }

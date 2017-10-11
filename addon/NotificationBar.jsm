@@ -11,15 +11,15 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 const log = console.log; // Temporary
 
-XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow","resource:///modules/RecentWindow.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow", "resource:///modules/RecentWindow.jsm");
 
 const MESSAGES = [
-    'FocusedCFR::log',
-    'FocusedCFR::openUrl',
-    'FocusedCFR::dismiss',
-    'FocusedCFR::close',
-    'FocusedCFR::action'
-  ]
+  "FocusedCFR::log",
+  "FocusedCFR::openUrl",
+  "FocusedCFR::dismiss",
+  "FocusedCFR::close",
+  "FocusedCFR::action",
+];
 
 this.EXPORTED_SYMBOLS = ["NotificationBar"];
 
@@ -38,26 +38,26 @@ function getMostRecentBrowserWindow() {
 
 
 class NotificationBar {
-  constructor(recommRecipe, messageListenerCallback){
+  constructor(recommRecipe, messageListenerCallback) {
     this.recommRecipe = recommRecipe;
     this.messageListenerCallback = messageListenerCallback;
   }
 
-  present(){
-    log('presenting notification bar');
+  present() {
+    log("presenting notification bar");
     this.show(getMostRecentBrowserWindow());
   }
 
-  show(win){
+  show(win) {
     let box = win.document.getElementById("focused-cfr-notificationbar-box");
 
-    if (box != null) { 
-      this.killNotification()
+    if (box !== null) {
+      this.killNotification();
     }
 
     box = win.document.createElement("hbox");
     box.setAttribute("id", "focused-cfr-notificationbar-box");
-    box.setAttribute("style", "height: 72px;");
+    box.setAttribute("style", "height: 76px;");
 
     const embeddedBrowser = win.document.createElement("browser");
     embeddedBrowser.setAttribute("id", "focused-cfr-notificationbar");
@@ -67,36 +67,36 @@ class NotificationBar {
     embeddedBrowser.setAttribute("flex", "1");
 
     box.appendChild(embeddedBrowser);
-    let content = win.document.getElementById("content");
+    const content = win.document.getElementById("appcontent");
     content.insertBefore(box, content.childNodes[0]);
 
     // seems that messageManager only available when browser is attached
     embeddedBrowser.messageManager.loadFrameScript(FRAME_SCRIPT, false);
 
-    for (let m of MESSAGES) {
+    for (const m of MESSAGES) {
       embeddedBrowser.messageManager.addMessageListener(m, this);
     }
 
-    embeddedBrowser.messageManager.sendAsyncMessage('FocusedCFR::load', this.recommRecipe);
+    embeddedBrowser.messageManager.sendAsyncMessage("FocusedCFR::load", this.recommRecipe);
   }
 
-  killNotification(){
+  killNotification() {
     const windowEnumerator = Services.wm.getEnumerator("navigator:browser");
 
-    log('killing notification');
+    log("killing notification");
 
     while (windowEnumerator.hasMoreElements()) {
       const win = windowEnumerator.getNext();
-      let box = win.document.getElementById("focused-cfr-notificationbar-box");
+      const box = win.document.getElementById("focused-cfr-notificationbar-box");
       if (box) {
-        box.parentNode.removeChild(box);
+        box.remove();
       }
     }
   }
 
   receiveMessage(message) {
     switch (message.name) {
-      case "FocusedCFR::log": 
+      case "FocusedCFR::log":
         log(message.data);
         break;
 
@@ -106,6 +106,7 @@ class NotificationBar {
         break;
 
       case "FocusedCFR::action":
+        this.killNotification();
         this.messageListenerCallback(message);
         break;
 
@@ -119,5 +120,9 @@ class NotificationBar {
         this.messageListenerCallback(message);
 
     }
+  }
+
+  shutdown() {
+    this.killNotification();
   }
 }

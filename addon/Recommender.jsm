@@ -16,30 +16,36 @@ XPCOMUtils.defineLazyModuleGetter(this, "Doorhanger", "resource://focused-cfr-sh
 XPCOMUtils.defineLazyModuleGetter(this, "NotificationBar", "resource://focused-cfr-shield-study/NotificationBar.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences", "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Bookmarks", "resource://gre/modules/Bookmarks.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow","resource:///modules/RecentWindow.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow", "resource:///modules/RecentWindow.jsm");
 
-let bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"]
+const bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"]
                       .getService(Components.interfaces.nsINavBookmarksService);
 
+let notificationBar;
+let doorhanger;
+
 const AMAZON_AFFILIATIONS = [
-                              "www.amazon.com",
-                              "www.amazon.ca",
-                              "www.amazon.co.uk",
-                              "www.audible.com",
-                              "www.audible.ca",
-                              "www.audible.co.uk"
-                            ];
+  "www.amazon.com",
+  "www.amazon.ca",
+  "www.amazon.co.uk",
+  "www.audible.com",
+  "www.audible.ca",
+  "www.audible.co.uk",
+];
 
 const PAGE_VISIT_GAP_MINUTES = 15;
-const NOTIFICATION_GAP_MINUTES = 1;
+const NOTIFICATION_GAP_MINUTES = 24 * 60;
 const MAX_NUMBER_OF_NOTIFICATIONS = 3;
 
 const NOTIFICATION_GAP_PREF = "extensions.focused_cfr_study.notification_gap_minutes";
 const MAX_NUMBER_OF_NOTIFICATIONS_PREF = "extensions.focused_cfr_study.max_number_of_notifications";
 const INIT_PREF = "extensions.focused_cfr_study.initialized";
 const POCKET_BOOKMARK_COUNT_PREF = "extensions.focused_cfr_study.pocket_bookmark_count_threshold";
+const AMAZON_COUNT_PREF = "extensions.focused_cfr_study.amazon_count_threshold";
+const PAGE_VISIT_GAP_PREF = "extensions.focused_cfr_study.page_visit_gap_minutes";
 
 const POCKET_BOOKMARK_COUNT_TRHESHOLD = 15;
+const AMAZON_VISIT_THRESHOLD = 4;
 
 const AMAZON_LINK = "www.amazon.com/gp/BIT/ref=bit_v2_BDFF1?tagbase=mozilla1";
 
@@ -49,57 +55,58 @@ const log = console.log; // Temporary
 
 let bookmarkObserver;
 let currentId;
+let windowListener;
 
 const recipes = {
   "amazon-assistant": {
     message: {
       text: `Instant product matches while you shop across the web with Amazon Assistant`,
       link: {
-        text: 'Amazon Assistant',
-        url: `${AMAZON_LINK}`
-      }
+        text: "Amazon Assistant",
+        url: `${AMAZON_LINK}`,
+      },
     },
     primaryButton: {
       label: `Add to Firefox`,
-      url: `${AMAZON_LINK}`
+      url: `${AMAZON_LINK}`,
     },
     icon: {
       url: "resource://focused-cfr-shield-study-content/images/amazon-assistant.png",
-      alt: "Amazon Assistant logo"
-    }
+      alt: "Amazon Assistant logo",
+    },
   },
   "mobile-promo": {
     message: {
-      text:`Your Firefox account meets your phone. They fall in love. Get Firefox on your phone now.`,
-      link: {}
+      text: `Your Firefox account meets your phone. They fall in love. Get Firefox on your phone now.`,
+      link: {},
     },
     primaryButton: {
-      label: 'Make a match',
-      url: `https://www.mozilla.org/en-US/firefox/mobile-download/desktop/`
+      label: "Make a match",
+      url: `https://www.mozilla.org/en-US/firefox/mobile-download/desktop/`,
     },
     icon: {
       url: "resource://focused-cfr-shield-study-content/images/mobile-promo.png",
-      alt: "Firefox Mobile logo"
-    }
+      alt: "Firefox Mobile logo",
+    },
   },
   "pocket": {
     message: {
       text: "You might like Pocket, which lets you save for later articles, videos, or pretty much anything!",
       link: {
         text: "Pocket",
-        url: "https://getpocket.com/firefox/"
-      }
+        url: "https://getpocket.com/firefox/",
+      },
     },
     primaryButton: {
       label: "Try it Now",
-      url: "http://www.getpocket.com/firefox_tryitnow"
+      url: "http://www.getpocket.com/firefox_tryitnow",
     },
     icon: {
       url: "resource://focused-cfr-shield-study-content/images/pocket.png",
-      alt: "Pocket Logo"
-    }
-  }
-}
+      alt: "Pocket Logo",
+    },
+  },
+};
 
 function getMostRecentBrowserWindow() {
   return RecentWindow.getMostRecentBrowserWindow({
@@ -110,9 +117,10 @@ function getMostRecentBrowserWindow() {
 
 class Recommender {
   constructor(telemetry, variation) {
+    this.test();
+
     log("hello");
     log("variation", variation);
-    this.test();
     this.telemetry = telemetry;
     this.variation = variation.name;
     this.variationUi = variation.ui;
@@ -120,7 +128,7 @@ class Recommender {
   }
 
   test() {
-    (new NotificationBar(recipes['mobile-promo'], this.presentationMessageListener.bind(this))).present();
+    (new NotificationBar(recipes["mobile-promo"], this.presentationMessageListener.bind(this))).present();
 
 
   }
@@ -128,7 +136,7 @@ class Recommender {
   async start() {
     if (Preferences.get(INIT_PREF)) return; // not first run
 
-    let isFirstRun = !(await Storage.has("general"));
+    const isFirstRun = !(await Storage.has("general"));
     if (isFirstRun)
       await this.firstRun();
 
@@ -141,36 +149,57 @@ class Recommender {
   }
 
   async firstRun() {
-    log('first run');
+    log("first run");
 
     await this.initRecommendations();
     await this.initLogs();
 
     await Storage.set("general", {
       started: true,
-      lastNotification: (new Date(0)).getTime()
+      lastNotification: (new Date(0)).getTime(),
     });
 
-    log('setting prefs');
+    log("setting prefs");
 
     Preferences.set(NOTIFICATION_GAP_PREF, NOTIFICATION_GAP_MINUTES);
     Preferences.set(MAX_NUMBER_OF_NOTIFICATIONS_PREF, MAX_NUMBER_OF_NOTIFICATIONS);
     Preferences.set(POCKET_BOOKMARK_COUNT_PREF, POCKET_BOOKMARK_COUNT_TRHESHOLD);
+    if (this.variationAmazon === "high")
+      Preferences.set(AMAZON_COUNT_PREF, AMAZON_VISIT_THRESHOLD);
+    else
+      Preferences.set(AMAZON_COUNT_PREF, AMAZON_VISIT_THRESHOLD * 2);
+    Preferences.set(PAGE_VISIT_GAP_PREF, PAGE_VISIT_GAP_MINUTES);
+
     Preferences.set(INIT_PREF, true);
   }
 
   async reportSummary() {
-    let logs = await Storage.get("logs");
+    const logs = await Storage.get("logs");
     let data = {
       "message_type": "summary_log",
       "variation": this.variation,
       "variation_ui": this.variationUi,
-      "variation_amazon": this.variationAmazon
-    }
+      "variation_amazon": this.variationAmazon,
+    };
 
     data = Object.assign({}, data, logs);
     console.log(data);
     this.telemetry(data);
+  }
+
+  async reportNotificationResult(result) {
+
+    const recomm = await Storage.get(`recomms.${currentId}`);
+
+    let data = {
+      "message_type": "notification_result",
+      "variation": this.variation,
+      "variation_ui": this.variationUi,
+      "variation_amazon": this.variationAmazon,
+      "count": recomm.presentation.count,
+      "status": recomm.presentation.status,
+      "result": result
+    }
   }
 
   async updateLog(attribute, value) {
@@ -178,11 +207,11 @@ class Recommender {
   }
 
   async updateLogWithId(id, attribute, value) {
-    return updateLog(`${id}_${attribute}`, value);
+    return this.updateLog(`${id}_${attribute}`, value);
   }
 
   async initLogs() {
-    let logs = {
+    const logs = {
       "amazon_delivered": "false",
       "amazon_action": "false",
       "amazon_close": "false",
@@ -194,8 +223,8 @@ class Recommender {
       "pocket_delivered": "false",
       "pocket_action": "false",
       "pocket_close": "false",
-      "pocket_dismiss": "false"
-    }
+      "pocket_dismiss": "false",
+    };
 
     Storage.set("logs", logs);
   }
@@ -206,7 +235,7 @@ class Recommender {
       status: "waiting",
       presentation: {
         count: 0,
-        never: false
+        never: false,
       },
     };
 
@@ -215,22 +244,22 @@ class Recommender {
       status: "waiting",
       presentation: {
         count: 0,
-        never: false
+        never: false,
       },
       trigger: {
         visitCount: 0,
         lastVisit: (new Date(0)).getTime(),
-        never: false
-      }
-    }
+        never: false,
+      },
+    };
 
     const pocket = {
       id: "pocket",
       status: "waiting",
       presentation: {
-        count: 0
-      }
-    }
+        count: 0,
+      },
+    };
 
     const recomms = {ids: ["mobile-promo", "amazon-assistant", "pocket"]};
     await Storage.set("recomms", recomms);
@@ -242,34 +271,34 @@ class Recommender {
   async checkForAmazonVisit(hostname) {
     if (!AMAZON_AFFILIATIONS.includes(hostname)) return;
 
-    let data = await Storage.get("recomms.amazon-assistant");
+    const data = await Storage.get("recomms.amazon-assistant");
 
-    if (Date.now() - data.trigger.lastVisit < PAGE_VISIT_GAP_MINUTES * 60 * 1000) return;
+    if (Date.now() - data.trigger.lastVisit < Preferences.get(PAGE_VISIT_GAP_PREF) * 60 * 1000) return;
 
-    log('amazon assistant visit');
+    log("amazon assistant visit");
 
     data.trigger.lastVisit = Date.now();
     data.trigger.visitCount += 1;
 
     log(`visit count: ${data.trigger.visitCount}`);
 
-    if (data.trigger.visitCount > 3)
-      this.queueRecommendation('amazon-assistant');
+    if (data.trigger.visitCount > Preferences.get(AMAZON_COUNT_PREF))
+      await this.queueRecommendation("amazon-assistant");
 
     await Storage.update("recomms.amazon-assistant", data);
 
-    await this.presentRecommendation('amazon-assistant');
+    await this.presentRecommendation("amazon-assistant");
   }
 
-  async listenForBookmarks(){
+  async listenForBookmarks() {
 
-    let that = this;
-    async function checkThreshold(){
-      let bookmarkCount = (await Bookmarks.getRecent(100)).length;
+    const that = this;
+    async function checkThreshold() {
+      const bookmarkCount = (await Bookmarks.getRecent(100)).length;
       log(`bookmark count: ${bookmarkCount}`);
-      let threshold = Preferences.get(POCKET_BOOKMARK_COUNT_PREF);
-      if (bookmarkCount > threshold){
-        that.queueRecommendation('pocket');
+      const threshold = Preferences.get(POCKET_BOOKMARK_COUNT_PREF);
+      if (bookmarkCount > threshold) {
+        await that.queueRecommendation("pocket");
       }
     }
 
@@ -278,9 +307,9 @@ class Recommender {
     bookmarkObserver = {
       onItemAdded: (aItemId, aParentId, aIndex, aItemType, aURI, aTitle,
                     aDateAdded, aGuid, aParentGuid) => {
-        console.log('bookmark added');
+        console.log("bookmark added");
 
-        checkThreshold().then(()=>this.presentRecommendation('pocket'));
+        checkThreshold().then(() => this.presentRecommendation("pocket"));
       },
       onItemRemoved() {},
 
@@ -298,16 +327,16 @@ class Recommender {
 
   listenForPageViews() {
 
-    let that = this;
+    const that = this;
 
     const progressListener = {
       QueryInterface: XPCOMUtils.generateQI(["nsIWebProgressListener",
-                                     "nsISupportsWeakReference"]),
+        "nsISupportsWeakReference"]),
 
-      onStateChange: function(aWebProgress, aRequest, aFlag, aStatus) {
+      onStateChange(aWebProgress, aRequest, aFlag, aStatus) {
       },
 
-      onLocationChange: function(aProgress, aRequest, aURI) {
+      onLocationChange(aProgress, aRequest, aURI) {
         // This fires when the location bar changes; that is load event is confirmed
         // or when the user switches tabs. If you use myListener for more than one tab/window,
         // use aProgress.DOMWindow to obtain the tab/window which triggered the change.
@@ -316,8 +345,7 @@ class Recommender {
 
         try {
           hostname = aURI.host;
-        }
-        catch (e){
+        } catch (e) {
           return;
         }
 
@@ -325,10 +353,10 @@ class Recommender {
       },
 
       // For definitions of the remaining functions see related documentation
-      onProgressChange: function(aWebProgress, aRequest, curSelf, maxSelf, curTot, maxTot) {},
-      onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage) {},
-      onSecurityChange: function(aWebProgress, aRequest, aState) {}
-    }
+      onProgressChange(aWebProgress, aRequest, curSelf, maxSelf, curTot, maxTot) {},
+      onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {},
+      onSecurityChange(aWebProgress, aRequest, aState) {},
+    };
 
     // current windows
     const windowEnumerator = Services.wm.getEnumerator("navigator:browser");
@@ -340,7 +368,7 @@ class Recommender {
 
 
     // new windows
-    const windowListener = {
+    windowListener = {
       onWindowTitleChange() { },
       onOpenWindow(xulWindow) {
         // xulWindow is of type nsIXULWindow, we want an nsIDOMWindow
@@ -353,17 +381,13 @@ class Recommender {
         // we need to use a listener function so that it's injected
         // once the window is loaded / ready
         const onWindowOpen = () => {
-          log('window opened');
+          log("window opened");
 
           domWindow.removeEventListener("load", onWindowOpen);
 
-          if (domWindow.document.documentElement.getAttribute("windowtype") != "navigator:browser") return;
-          
-          // add progress listener
+          if (domWindow.document.documentElement.getAttribute("windowtype") !== "navigator:browser") return;
 
-          const STATE_START = Ci.nsIWebProgressListener.STATE_START;
-          const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP;
-          
+          // add progress listener
           domWindow.gBrowser.addProgressListener(progressListener);
         };
 
@@ -399,16 +423,21 @@ class Recommender {
     Preferences.observe("services.sync.clients.devices.desktop", checkPrefs);
     Preferences.observe("services.sync.clients.devices.mobile", checkPrefs);
 
-    setTimeout(()=> this.presentRecommendation("mobile-promo"), 10 * 60 * 1000);
+    setTimeout(() => this.presentRecommendation("mobile-promo"), 10 * 60 * 1000);
 
     return checkPrefs();
+  }
+
+  async action(id) {
+    await Storage.update(`recomms.${id}`, {status: `action`});
+    log(`${id} status changed to action`);
   }
 
   async queueRecommendation(id) {
     log(`trying to queue recommendation ${id}`);
 
     const recomm = await Storage.get(`recomms.${id}`);
-    if (recomm.status != 'waiting') return;
+    if (recomm.status !== "waiting") return;
 
     log(`queueing recommendation ${id}$`);
     await Storage.update(`recomms.${id}`, {status: `queued`});
@@ -423,38 +452,44 @@ class Recommender {
 
     log(recomm);
 
-    if (recomm.status == "waiting") return;
+    if (recomm.status === "waiting" || recomm.status === "action") return;
     if (recomm.presentation.count >= Preferences.get(MAX_NUMBER_OF_NOTIFICATIONS_PREF)) return;
     if (Date.now() - general.lastNotification < Preferences.get(NOTIFICATION_GAP_PREF) * 60 * 1000) return;
     if (recomm.presentation.never) return;
-    if (this.variation == 'control') return;
+    if (this.variation === "control") return;
 
     log(`presenting recommendation ${id}`);
 
     // present
-    recommRecipe = recips[id];
+    const recommRecipe = recipes[id];
     currentId = id;
 
-    if (this.variationUi == 'doorhanger')
-      new Doorhanger(recommRecipe, this.presentationMessageListener.bind(this));
+    if (this.variationUi === "doorhanger"){
+      doorhanger = new Doorhanger(recommRecipe, this.presentationMessageListener.bind(this));
+      doorhanger.present();
+    }
 
-    if (this.variationUi == 'bar')
-      new NotificationBar(recommRecipe, this.presentationMessageListener.bind(this));
+    if (this.variationUi === "bar"){
+      notificationBar = new NotificationBar(recommRecipe, this.presentationMessageListener.bind(this));
+      notificationBar.present();
+    }
 
-    recomm.status == "presented";
+    recomm.status = "presented";
     recomm.presentation.count += 1;
 
-    this.updateLogWithId(id, "delivered", "true");
+    await Storage.update("general", {lastNotification: Date.now()})
+
+    await this.updateLogWithId(id, "delivered", "true");
 
     await Storage.update(`recomms.${id}`, recomm);
 
     this.reportSummary();
   }
 
-  presentationMessageListener(message){
-    log('message received from presentation');
+  presentationMessageListener(message) {
+    log("message received from presentation");
 
-    switch (message.name){
+    switch (message.name) {
       case "FocusedCFR::openUrl":
         getMostRecentBrowserWindow().gBrowser.loadOneTab(message.data, {
           inBackground: false,
@@ -463,18 +498,39 @@ class Recommender {
       case "FocusedCFR::dismiss":
         this.updateLogWithId(currentId, "dismiss", "true");
         this.reportSummary();
+        this.reportNotificationResult("dismiss");
         break;
 
       case "FocusedCFR::action":
         this.updateLogWithId(currentId, "action", "true");
+        this.action(currentId);
         this.reportSummary();
+        this.reportNotificationResult("action");
         break;
 
       case "FocusedCFR::close":
         this.updateLogWithId(currentId, "close", "true");
         this.reportSummary();
+        this.reportNotificationResult("close")
         break;
     }
+  }
+
+  shutdown(){
+    bmsv.removeObserver(bookmarkObserver);
+    if (doorhanger) {
+      doorhanger.shutdown();
+    }
+    if (notificationBar) {
+      notificationBar.shutdown();
+    }
+    if (windowListener) {
+      Services.wm.removeListener(windowLister);
+    }
+
+    Cu.unload("resource://focused-cfr-shield-study/Doorhanger.jsm");
+    Cu.unload("resource://focused-cfr-shield-study/NotificationBar.jsm");
+    Cu.unload("resource://focused-cfr-shield-study/Storage.jsm");
   }
 }
 

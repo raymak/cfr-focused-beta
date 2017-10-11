@@ -6,7 +6,7 @@
   --primary-border-color: #b7b7b7;
   --standard-box-shadow: 0 10px 20px rgba(50,50,93,.1),0 3px 7px rgba(50,50,93,.15),0 1px 3px rgba(0,0,0,.1);
   --dropdown-box-shadow: 0 50px 100px rgba(50, 50, 93, .1), 0 15px 35px rgba(50, 50, 93, .15), 0 5px 15px rgba(0, 0, 0, .1);
-  --accept-button-background-color: #0093fa;
+  --accept-button-background-color: #0187fe;
   --accept-button-hover-background-color: #00329a;
   --reject-button-background-color: #fbfbfb;
   --reject-button-hover-background-color: #e1e1e2;
@@ -56,8 +56,10 @@ a {
 }
 
 .button {
-  margin-left: 5px;
+  margin-left: 10px;
   padding: 5px;
+  border: 2px solid #0161cc;
+  font-size: 1em;
   cursor: pointer;
   color: var(--primary-text-color);
 }
@@ -182,13 +184,56 @@ a {
   width: 25px;
 }
 
-label, .link {
-  font-size: .75em;
-}
-
 .star-rating, #additional-info, #close-icon {
   margin-left: 10px;
 }
+
+/* Remove System Checkbox */
+input[type="checkbox"] {
+  display:none;
+}
+
+/* Fake checkbox made in CSS */
+.checkbox {
+  display:inline-block;
+  width:20px;
+  height:20px;
+  vertical-align: middle;
+  background-color: white;
+  border: 1px solid #aeaeae;
+  border-radius: 4px;
+  margin: 0 .5em;
+  cursor: pointer;
+}
+
+.checkbox-label {
+  vertical-align: middle;
+  line-height: 20px; /* same as fake checkbox height */
+}
+
+input[type="checkbox"] + span {
+  position: relative;
+}
+
+/* Adding the checkmark when the checkbox is checked */
+input[type="checkbox"]:checked + span:after {
+/*Add a block-level blank space*/
+  content: "";
+  display: block;
+/*Make a small rectangle*/
+  width: 8px;
+  height: 15px;
+/*Add a border on the bottom and right, creating an 'L' */
+  border: solid white;
+  border-width: 0 3px 3px 0;
+/*Position it on top of the custom checkbox*/
+  position:absolute;
+  top: -5%;
+  left: 25%;
+/*Rotate the L to make it look like a checkmark*/
+  transform: rotate(45deg);
+}
+
 
 #close-icon {
   fill: var(--primary-text-color);

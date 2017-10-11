@@ -11,15 +11,15 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 const log = console.log; // Temporary
 
-XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow","resource:///modules/RecentWindow.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow", "resource:///modules/RecentWindow.jsm");
 
 const MESSAGES = [
-    'FocusedCFR::log',
-    'FocusedCFR::openUrl',
-    'FocusedCFR::dismiss',
-    'FocusedCFR::close',
-    'FocusedCFR::action'
-  ]
+  "FocusedCFR::log",
+  "FocusedCFR::openUrl",
+  "FocusedCFR::dismiss",
+  "FocusedCFR::close",
+  "FocusedCFR::action",
+];
 
 this.EXPORTED_SYMBOLS = ["Doorhanger"];
 
@@ -37,24 +37,24 @@ function getMostRecentBrowserWindow() {
 }
 
 class Doorhanger {
-  constructor(recommRecipe, messageListenerCallback){
+  constructor(recommRecipe, messageListenerCallback) {
     this.recommRecipe = recommRecipe;
     this.messageListenerCallback = messageListenerCallback;
   }
 
-  present(){
-    log('presenting doorhanger');
+  present() {
+    log("presenting doorhanger");
     this.show(getMostRecentBrowserWindow());
   }
 
   show(win) {
     let panel = win.document.getElementById("focused-cfr-doorhanger-panel");
-    let burgerButton = win.document.getElementById("PanelUI-menu-button");
+    const burgerButton = win.document.getElementById("PanelUI-menu-button");
 
-    if (panel != null){
+    if (panel !== null) {
       this.killNotification();
     }
-  
+
     panel = win.document.createElement("panel");
     panel.setAttribute("id", "focused-cfr-doorhanger-panel");
     panel.setAttribute("class", "no-padding-panel");
@@ -74,38 +74,38 @@ class Doorhanger {
     panel.appendChild(embeddedBrowser);
     win.document.getElementById("mainPopupSet").appendChild(panel);
 
-    win.document.getAnonymousElementByAttribute(panel, "class", "panel-arrowcontent").setAttribute("style", "padding: 0px;")
+    win.document.getAnonymousElementByAttribute(panel, "class", "panel-arrowcontent").setAttribute("style", "padding: 0px;");
 
     // seems that messageManager only available when browser is attached
     embeddedBrowser.messageManager.loadFrameScript(FRAME_SCRIPT, false);
 
-    for (let m of MESSAGES) {
+    for (const m of MESSAGES) {
       embeddedBrowser.messageManager.addMessageListener(m, this);
     }
 
     panel.openPopup(burgerButton, "", 0, 0, false, false);
 
-    embeddedBrowser.messageManager.sendAsyncMessage('FocusedCFR::load', this.recommRecipe);
+    embeddedBrowser.messageManager.sendAsyncMessage("FocusedCFR::load", this.recommRecipe);
 
   }
 
-  killNotification(){
+  killNotification() {
     const windowEnumerator = Services.wm.getEnumerator("navigator:browser");
 
-    log('killing notification');
+    log("killing notification");
 
     while (windowEnumerator.hasMoreElements()) {
       const win = windowEnumerator.getNext();
-      let box = win.document.getElementById("focused-cfr-doorhanger-panel");
+      const box = win.document.getElementById("focused-cfr-doorhanger-panel");
       if (box) {
-        box.parentNode.removeChild(box);
+        box.remove();
       }
     }
   }
 
   receiveMessage(message) {
     switch (message.name) {
-      case "FocusedCFR::log": 
+      case "FocusedCFR::log":
         log(message.data);
         break;
 
@@ -115,6 +115,7 @@ class Doorhanger {
         break;
 
       case "FocusedCFR::action":
+        this.killNotification();
         this.messageListenerCallback(message);
         break;
 
@@ -130,4 +131,7 @@ class Doorhanger {
     }
   }
 
+  shutdown(){
+    this.killNotification();
+  }
 }

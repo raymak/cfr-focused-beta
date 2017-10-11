@@ -19,31 +19,31 @@ var config = {
       {"name": "control",
         "weight": 1,
         "ui": "control",
-        "amazon": "control"
+        "amazon": "control",
       },
       {"name": "doorhanger-amazon-low",
         "weight": 1,
         "ui": "doorhanger",
-        "amazon": "low"
+        "amazon": "low",
       },
       {
         "name": "doorhanger-amazon-high",
         "weight": 1,
         "ui": "doorhanger",
-        "amazon": "high"
+        "amazon": "high",
       },
       {
         "name": "bar-amazon-low",
         "weight": 1,
         "ui": "bar",
-        "amazon": "low"
+        "amazon": "low",
       },
       {
         "name": "bar-amazon-high",
         "weight": 1,
         "ui": "bar",
-        "amazon": "high"
-      }
+        "amazon": "high",
+      },
     ],
     /** **endings**
       * - keys indicate the 'endStudy' even that opens these.
@@ -61,7 +61,7 @@ var config = {
         "baseUrl": null,
       },
       "expired": {
-        "baseUrl": null,
+        "baseUrl": "https://qsurvey.mozilla.com/s3/cfr-v1",
       },
       /** User defined endings */
       "too-popular": {

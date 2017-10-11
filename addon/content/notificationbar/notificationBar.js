@@ -1,62 +1,59 @@
 "use strict";
 
-let window;
+/* global content addMessageListener sendAsyncMessage */
+
 let document;
 let recipe;
 
-addMessageListener('FocusedCFR::load', {
-  receiveMessage: function(message) {
-    window = content;
-    document = content.document;
+addMessageListener("FocusedCFR::load", {
+  receiveMessage(message) {
+    document = content.document; // eslint-disable-line no-global-assign, no-native-reassign
 
-    let data = message.data;
+    const data = message.data;
     recipe = {
       notificationBar: {
         icon: data.icon,
         message: data.message,
         primaryButton: {
           label: data.primaryButton.label,
-          color: '', // e.g. '#53bf28'
+          color: "", // e.g. '#53bf28'
           icon: {
-            url: '' // e.g. 'plus-sign.svg'
+            url: "", // e.g. 'plus-sign.svg'
           },
-          url: data.primaryButton.url
+          url: data.primaryButton.url,
         },
         secondaryButton: {
-          label: 'Not Now',
+          label: '',
           dropdownOptions: [
-            {
-              id: 'dont-show',
-              label: "Don't show me this again" 
-            }
-          ]
+    
+          ],
         },
         starRating: {
-          url: '', // e.g. 'fourStars.png'
+          url: "", // e.g. 'fourStars.png'
           // specify where in notificationBar this element should be included
-          location: '' // acceptable values: 'left', 'middle', 'right'
+          location: "", // acceptable values: 'left', 'middle', 'right'
         },
         link: {
-          text: '', // e.g. 'Learn More' or '361 reviews'
-          url: '', // e.g. 'https://addons.mozilla.org/en-US/firefox/addon/amazon-browser-bar/' or 'https://addons.mozilla.org/en-US/firefox/addon/amazon-browser-bar/reviews/'
-          location: '' // acceptable values: 'middle', 'right'
+          text: "", // e.g. 'Learn More' or '361 reviews'
+          url: "", // e.g. 'https://addons.mozilla.org/en-US/firefox/addon/amazon-browser-bar/' or 'https://addons.mozilla.org/en-US/firefox/addon/amazon-browser-bar/reviews/'
+          location: "", // acceptable values: 'middle', 'right'
         },
         checkbox: {
-          label: '' // e.g. "Don't ask me again"
+          label: "Don't show me this again", // e.g. "Don't ask me again"
         },
         additionalInfo: {
-          text: '' // e.g. '408,835 users' or '361 reviews'
-        }
-      }
-    }
+          text: "", // e.g. '408,835 users' or '361 reviews'
+        },
+      },
+    };
     notificationBar.init();
-  }
+  },
 });
 
-sendAsyncMessage('FocusedCFR::log', 'frame script loaded');
+sendAsyncMessage("FocusedCFR::log", "frame script loaded");
 
-/**const recipe = {
-  
+/** const recipe = {
+
   notificationBar: {
     // DEFAULT ELEMENTS:
     // to remove from UI, replace string value with ''.
@@ -86,10 +83,10 @@ sendAsyncMessage('FocusedCFR::log', 'frame script loaded');
       dropdownOptions: [
         {
           id: 'dont-show',
-          label: "Don't show me this again" 
+          label: "Don't show me this again"
         }
       ]
-    },    
+    },
     // OPTIONAL ELEMENTS
     starRating: {
       url: '', // e.g. 'fourStars.png'
@@ -108,7 +105,7 @@ sendAsyncMessage('FocusedCFR::log', 'frame script loaded');
       text: '' // e.g. '408,835 users' or '361 reviews'
     }
   }
-};  **/ 
+};  **/
 
 const notificationBar = {
 
@@ -117,39 +114,43 @@ const notificationBar = {
   },
 
   addListeners() {
-    window.addEventListener('load', () => {
+    content.addEventListener("load", () => {
       this.createNotificationBar();
-      this.closeIconEle.addEventListener('click', () => {
+      this.closeIconEle.addEventListener("click", () => {
         this.closeNotificationBar();
       });
-      this.secondaryButtonShowDropdownEle.addEventListener('click', () => {
+      this.secondaryButtonShowDropdownEle.addEventListener("click", () => {
         this.toggleDropdownMenu();
       });
 
       // primary button
-      this.primaryButtonEle.classList.add('external-link');
+      this.primaryButtonEle.classList.add("external-link");
       this.primaryButtonEle.dataset.url = recipe.notificationBar.primaryButton.url;
       this.registerExternalLinks();
-      this.primaryButtonEle.addEventListener('click', ()=>{
-        sendAsyncMessage('FocusedCFR::action');
+      this.primaryButtonEle.addEventListener("click", () => {
+        sendAsyncMessage("FocusedCFR::action");
       });
 
       // secondary button
-      this.secondaryButtonEle.addEventListener('click', ()=>{
-        sendAsyncMessage('FocusedCFR::dismiss');
+      this.secondaryButtonEle.addEventListener("click", () => {
+        sendAsyncMessage("FocusedCFR::dismiss");
       });
 
       // close button
-      this.closeIconEle.addEventListener('click', ()=>{
-        sendAsyncMessage('FocusedCFR::close');
+      this.closeIconEle.addEventListener("click", () => {
+        sendAsyncMessage("FocusedCFR::close");
+      });
+
+      this.fakeCheckboxEle.addEventListener('click', () => {
+       this.toggleCheckbox();
       });
     });
   },
 
-  registerExternalLinks(){
-    for (let ele of document.getElementsByClassName('external-link')){
-      ele.addEventListener('click', (e)=>{
-        sendAsyncMessage('FocusedCFR::openUrl', ele.dataset.url);
+  registerExternalLinks() {
+    for (const ele of document.getElementsByClassName("external-link")) {
+      ele.addEventListener("click", (e) => {
+        sendAsyncMessage("FocusedCFR::openUrl", ele.dataset.url);
         e.preventDefault();
       });
     }
@@ -162,37 +163,38 @@ const notificationBar = {
   },
 
   closeNotificationBar() {
-    this.notificationBarEle.classList.add('hidden');
+    this.notificationBarEle.classList.add("hidden");
   },
 
   toggleDropdownMenu() {
-    this.dropdownMenuEle.classList.toggle('hidden');
+    this.dropdownMenuEle.classList.toggle("hidden");
   },
 
   getElements() {
-    this.notificationBarEle = document.getElementById('notification-bar');
-    this.iconEle = document.getElementById('icon');
-    this.ratingLeftEle = document.getElementById('rating-left');
-    this.messageEle = document.getElementById('message');
-    this.linkMiddleEle = document.getElementById('link-middle');
-    this.ratingMiddleEle = document.getElementById('rating-middle');
-    this.primaryButtonEle = document.getElementById('primary-button');
-    this.secondaryButtonEle = document.getElementById('secondary-button');
-    this.secondaryButtonShowDropdownEle = document.getElementById('secondary-button-show-dropdown');
-    this.dropdownMenuEle = document.getElementById('dropdown-menu');
-    this.checkboxEle = document.getElementById('checkbox');
-    this.ratingRightEle = document.getElementById('rating-right');
-    this.additionalInfoEle = document.getElementById('additional-info');
-    this.checkboxLabelEle = document.getElementById('checkbox-label');
-    this.closeIconEle = document.getElementById('close-icon');
-    this.linkRightEle = document.getElementById('link-right');
+    this.notificationBarEle = document.getElementById("notification-bar");
+    this.iconEle = document.getElementById("icon");
+    this.ratingLeftEle = document.getElementById("rating-left");
+    this.messageEle = document.getElementById("message");
+    this.linkMiddleEle = document.getElementById("link-middle");
+    this.ratingMiddleEle = document.getElementById("rating-middle");
+    this.primaryButtonEle = document.getElementById("primary-button");
+    this.secondaryButtonEle = document.getElementById("secondary-button");
+    this.secondaryButtonShowDropdownEle = document.getElementById("secondary-button-show-dropdown");
+    this.dropdownMenuEle = document.getElementById("dropdown-menu");
+    this.realCheckboxEle = document.getElementById("real-checkbox");
+    this.fakeCheckboxEle = document.getElementById("fake-checkbox");    
+    this.ratingRightEle = document.getElementById("rating-right");
+    this.additionalInfoEle = document.getElementById("additional-info");
+    this.checkboxLabelEle = document.getElementById("checkbox-label");
+    this.closeIconEle = document.getElementById("close-icon");
+    this.linkRightEle = document.getElementById("link-right");
   },
 
   addDropdownMenuElements() {
     recipe.notificationBar.secondaryButton.dropdownOptions.forEach((item) => {
-      const menuItem = document.createElement('li');
-      menuItem.setAttribute('id', item.id);
-      menuItem.classList.add('dropdown-item');
+      const menuItem = document.createElement("li");
+      menuItem.setAttribute("id", item.id);
+      menuItem.classList.add("dropdown-item");
       this.dropdownMenuEle.appendChild(menuItem);
     });
   },
@@ -201,18 +203,18 @@ const notificationBar = {
     if (recipe.notificationBar.icon.url) {
       this.addImageContent();
     } else {
-      this.iconEle.style.display = 'none';
+      this.iconEle.style.display = "none";
     }
 
     if (recipe.notificationBar.starRating.url) {
       switch (recipe.notificationBar.starRating.location) {
-        case 'left':
+        case "left":
           this.addRatingLeftContent();
           break;
-        case 'middle':
+        case "middle":
           this.addRatingMiddleContent();
           break;
-        case 'right':
+        case "right":
           this.addRatingRightContent();
           break;
         default:
@@ -220,9 +222,9 @@ const notificationBar = {
           break;
       }
     } else {
-      this.ratingLeftEle.style.display = 'none';
-      this.ratingMiddleEle.style.display = 'none';
-      this.ratingRightEle.style.display = 'none';
+      this.ratingLeftEle.style.display = "none";
+      this.ratingMiddleEle.style.display = "none";
+      this.ratingRightEle.style.display = "none";
     }
     if (recipe.notificationBar.primaryButton.color) {
       this.primaryButtonEle.style.backgroundColor = recipe.notificationBar.primaryButton.color;
@@ -236,25 +238,25 @@ const notificationBar = {
     if (recipe.notificationBar.primaryButton.label) {
       this.addPrimaryButtonContent();
     } else {
-      this.primaryButtonEle.style.display = 'none';
+      this.primaryButtonEle.style.display = "none";
     }
     if (recipe.notificationBar.secondaryButton.label) {
       this.addSecondaryButtonContent();
     } else {
-      this.secondaryButtonEle.style.display = 'none';
-      this.secondaryButtonShowDropdownEle.style.display = 'none';
+      this.secondaryButtonEle.style.display = "none";
+      this.secondaryButtonShowDropdownEle.style.display = "none";
     }
     if (recipe.notificationBar.message.text) {
       this.addMessageContent();
     } else {
-      this.messageEle.style.display ='none';
+      this.messageEle.style.display = "none";
     }
     if (recipe.notificationBar.link.text) {
       switch (recipe.notificationBar.link.location) {
-        case 'middle':
+        case "middle":
           this.addLinkMiddleContent();
           break;
-        case 'right':
+        case "right":
           this.addLinkRightContent();
           break;
         default:
@@ -263,19 +265,22 @@ const notificationBar = {
           break;
       }
     } else {
-      this.linkMiddleEle.style.display = 'none';
-      this.linkRightEle.style.display = 'none';
+      this.linkMiddleEle.style.display = "none";
+      this.linkRightEle.style.display = "none";
     }
-    if (recipe.notificationBar.secondaryButton.dropdownOptions) {
+
+    if (recipe.notificationBar.secondaryButton.dropdownOptions === []) {
       this.addDropdownMenuContent();
     } else {
-      this.dropdownMenuEle.style.display = 'none';
+      this.secondaryButtonShowDropdownEle.style.display = 'none';
+      this.dropdownMenuEle.style.display = "none";
     }
     if (recipe.notificationBar.checkbox.label) {
       this.addCheckboxContent();
     } else {
-      this.checkboxEle.style.display = 'none';
-      this.checkboxLabelEle.style.display = 'none';
+       this.realCheckboxEle.style.display = 'none';
+       this.fakeCheckboxEle.style.display = 'none';
+       this.checkboxLabelEle.style.display = 'none';
     }
   },
 
@@ -328,10 +333,22 @@ const notificationBar = {
 
   addCheckboxContent() {
     this.checkboxLabelEle.textContent = recipe.notificationBar.checkbox.label;
+        const labelText = this.checkboxLabelEle.textContent;
+    this.realCheckboxEle.setAttribute('aria-label', labelText);
+  },
+
+  toggleCheckbox() {
+    if (this.realCheckboxEle.checked == false) {
+      this.realCheckboxEle.checked = true;
+      this.fakeCheckboxEle.style.backgroundColor = "#0187fe";
+    } else {
+      this.realCheckboxEle.checked = false;
+      this.fakeCheckboxEle.style.backgroundColor = "white";
+    }
   },
 
   addLinkRightContent() {
     this.linkRightEle.textContent = recipe.notificationBar.link.text;
     this.linkRightEle.href = recipe.notificationBar.link.url;
-  }
+  },
 };
