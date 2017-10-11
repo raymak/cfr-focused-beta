@@ -7,6 +7,7 @@
 
 let document;
 let recipe;
+let timeoutTimer;
 
 /* global addMessageListener  sendAsyncMessage content */
 
@@ -62,12 +63,16 @@ function load(data) {
   document.getElementById("prim-button").textContent = primButtonLabel;
   document.getElementById("prim-button").classList.add("external-link");
   document.getElementById("prim-button").dataset.url = data.primaryButton.url;
+
   document.getElementById("sec-button").textContent = secButtonLabel;
   if (!primButtonLabel)
     document.getElementById("prim-button").classList.add("disabled");
   if (!secButtonLabel)
     document.getElementById("sec-button").classList.add("disabled");
 
+  document.getElementById("fake-checkbox").addEventListener('click', () => {
+    toggleCheckbox();
+  }); 
 
   // setting the callback
   document.getElementById("sec-button").addEventListener("click", secButtonClick);
@@ -78,6 +83,8 @@ function load(data) {
   // document.getElementById("info-page").addEventListener("click", infoClick);
 
   registerExternalLinks();
+
+  timeoutTimer = content.setTimeout(timeout, 2 * 60 * 1000);
 }
 
 function registerExternalLinks() {
@@ -98,15 +105,19 @@ function capitalize(string) {
 }
 
 function secButtonClick() {
-  sendAsyncMessage("FocusedCFR::dismiss");
+  let realCheckboxEle = document.getElementById("real-checkbox");
+  sendAsyncMessage("FocusedCFR::dismiss", realCheckboxEle.checked);
+  clearTimeout();
 }
 
 function primButtonClick() {
   self.port.emit("FocusedCFR::action");
+  clearTimeout();
 }
 
 function closeButtonClick() {
-  self.port.emit("FocusedCFR::close");
+  self.port.emit("FocusedCFR::close", realCheckboxEle.checked);
+  clearTimeout();
 }
 
 function changeBodySize(panelSize) {
@@ -119,5 +130,26 @@ function updatePanelSize(width, height) {
     width: width || Number(getComputedStyle(document.body).width.slice(0, -2))});
 }
 
+function toggleCheckbox() {
+  let realCheckboxEle = document.getElementById("real-checkbox");
+  let fakeCheckboxEle = document.getElementById("fake-checkbox"); 
+  if (realCheckboxEle.checked == false) {
+    realCheckboxEle.checked = true;
+    fakeCheckboxEle.style.backgroundColor = "#0187fe";
+  } else {
+    realCheckboxEle.checked = false;
+    fakeCheckboxEle.style.backgroundColor = "white";
+  }
+}
+
+function timeout() {
+  let realCheckboxEle = document.getElementById("real-checkbox");
+
+  sendAsyncMessage("FocusedCFR::timeout", realCheckboxEle.checked);
+}
+
+function clearTimeout() {
+  content.clearTimeout(timeoutTimer);
+}
 
 self.port.emit("panel-ready");

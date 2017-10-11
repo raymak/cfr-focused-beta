@@ -8,8 +8,9 @@ set -eu
 BASE_DIR="$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")"
 TMP_DIR=$(mktemp -d)
 DEST="${TMP_DIR}/addon"
-XPI=${XPI:-addon.xpi}
-
+ADDON_VERSION=$(node -p -e "require('./package.json').addon.version");
+ADDON_ID=$(node -p -e "require('./package.json').addon.id")
+XPI_NAME="${ADDON_ID}-${ADDON_VERSION}".xpi
 
 mkdir -p $DEST
 
@@ -29,9 +30,9 @@ cp -rp addon/* $DEST
 
 echo "$DEST"
 pushd "$DEST"
-zip -r "$DEST/${XPI}" *
+zip -r "$DEST/${XPI_NAME}" *
 mkdir -p "$BASE_DIR/dist"
-mv "${XPI}" "$BASE_DIR/dist"
-echo "xpi at ${BASE_DIR}/dist/${XPI}"
+mv "${XPI_NAME}" "$BASE_DIR/dist"
+echo "xpi at ${BASE_DIR}/dist/${XPI_NAME}"
 popd
 

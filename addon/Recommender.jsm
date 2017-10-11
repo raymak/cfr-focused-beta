@@ -43,9 +43,10 @@ const INIT_PREF = "extensions.focused_cfr_study.initialized";
 const POCKET_BOOKMARK_COUNT_PREF = "extensions.focused_cfr_study.pocket_bookmark_count_threshold";
 const AMAZON_COUNT_PREF = "extensions.focused_cfr_study.amazon_count_threshold";
 const PAGE_VISIT_GAP_PREF = "extensions.focused_cfr_study.page_visit_gap_minutes";
+const DEBUG_MODE_PREF = "extensions.focused_cfr_study.debug_mode";
 
 const POCKET_BOOKMARK_COUNT_TRHESHOLD = 15;
-const AMAZON_VISIT_THRESHOLD = 4;
+const AMAZON_VISIT_THRESHOLD = 3;
 
 const AMAZON_LINK = "www.amazon.com/gp/BIT/ref=bit_v2_BDFF1?tagbase=mozilla1";
 
@@ -119,8 +120,6 @@ class Recommender {
   constructor(telemetry, variation) {
     this.test();
 
-    log("hello");
-    log("variation", variation);
     this.telemetry = telemetry;
     this.variation = variation.name;
     this.variationUi = variation.ui;
@@ -128,7 +127,7 @@ class Recommender {
   }
 
   test() {
-    currentId = "amazon-assistant";
+    currentId = "pocket";
     (new Doorhanger(recipes[currentId], this.presentationMessageListener.bind(this))).present();
   }
 
@@ -168,6 +167,7 @@ class Recommender {
     else
       Preferences.set(AMAZON_COUNT_PREF, AMAZON_VISIT_THRESHOLD * 2);
     Preferences.set(PAGE_VISIT_GAP_PREF, PAGE_VISIT_GAP_MINUTES);
+    Preferences.set(DEBUG_MODE_PREF, false);
 
     Preferences.set(INIT_PREF, true);
   }
@@ -182,8 +182,21 @@ class Recommender {
     };
 
     data = Object.assign({}, data, logs);
-    console.log(data);
+    log(`summary report: ${data}`);
     this.telemetry(data);
+  }
+
+  async reportEvent(id, event) {
+    let data = {
+      "message_type": "event",
+      "variation": this.variation,
+      "variation_ui": this.variationUi,
+      "variation_amazon": this.variationAmazon,
+      "id": id,
+      "event": event
+    };
+    log(`event report: ${data}`);
+    this.telemetry(data)
   }
 
   async reportNotificationResult(result) {
@@ -196,8 +209,12 @@ class Recommender {
       "variation_amazon": this.variationAmazon,
       "count": recomm.presentation.count,
       "status": recomm.presentation.status,
+      "id": currentId,
       "result": result
     }
+
+    Utils.printStorage();
+    this.telemetry(data);
   }
 
   async updateLog(attribute, value) {
@@ -214,14 +231,20 @@ class Recommender {
       "amazon_action": "false",
       "amazon_close": "false",
       "amazon_dismiss": "false",
+      "amazon_nevershow": "false",
+      "amazon_timeout": "false",
       "mobile-promo_delivered": "false",
       "mobile-promo_action": "false",
       "mobile-promo_close": "false",
       "mobile-promo_dismiss": "false",
+      "mobile-promo_nevershow": "false",
+      "mobile-promo_timeout": "false",
       "pocket_delivered": "false",
       "pocket_action": "false",
       "pocket_close": "false",
       "pocket_dismiss": "false",
+      "pocket_nevershow": "false",
+      "pocket_timeout": "false"
     };
 
     Storage.set("logs", logs);
@@ -429,6 +452,7 @@ class Recommender {
   async action(id) {
     await Storage.update(`recomms.${id}`, {status: `action`});
     log(`${id} status changed to action`);
+    this.reportEvent(id, "action");
   }
 
   async queueRecommendation(id) {
@@ -439,6 +463,7 @@ class Recommender {
 
     log(`queueing recommendation ${id}$`);
     await Storage.update(`recomms.${id}`, {status: `queued`});
+    reportEvent(id, "queued");
   }
 
   async presentRecommendation(id) {
@@ -451,9 +476,18 @@ class Recommender {
     log(recomm);
 
     if (recomm.status === "waiting" || recomm.status === "action") return;
-    if (recomm.presentation.count >= Preferences.get(MAX_NUMBER_OF_NOTIFICATIONS_PREF)) return;
-    if (Date.now() - general.lastNotification < Preferences.get(NOTIFICATION_GAP_PREF) * 60 * 1000) return;
-    if (recomm.presentation.never) return;
+    if (recomm.presentation.count >= Preferences.get(MAX_NUMBER_OF_NOTIFICATIONS_PREF)) {
+      log(`max number of notifications delivered for ${id}`);
+      return;
+    }
+    if (Date.now() - general.lastNotification < Preferences.get(NOTIFICATION_GAP_PREF) * 60 * 1000) {
+      log(`notification gap not enough for delivery`);
+      return;
+    }
+    if (recomm.presentation.never) {
+      log(`user has disabled further notification delivery for ${id}`);
+      return;
+    }
     if (this.variation === "control") return;
 
     log(`presenting recommendation ${id}`);
@@ -481,10 +515,18 @@ class Recommender {
 
     await Storage.update(`recomms.${id}`, recomm);
 
+    this.reportEvent(id, "presented");
     this.reportSummary();
   }
 
-  presentationMessageListener(message) {
+  async neverShow(id) {
+    const recomm = await Storage.get(`recomms.${id}`);
+    recomm.presentation.nevershow = true;
+    await Storage.update(`recomms.${id}`, recomm);
+    reportEvent(id, "nevershow");
+  }
+
+  async presentationMessageListener(message) {
     log("message received from presentation");
 
     switch (message.name) {
@@ -494,22 +536,41 @@ class Recommender {
         });
         break;
       case "FocusedCFR::dismiss":
-        this.updateLogWithId(currentId, "dismiss", "true");
-        this.reportSummary();
-        this.reportNotificationResult("dismiss");
+        await this.updateLogWithId(currentId, "dismiss", "true");
+        if (message.data == true) {
+          await this.updateLogWithId(currentId, "nevershow", "true");
+          await this.neverShow(currentId);
+        }
+        await this.reportSummary();
+        await this.reportNotificationResult("dismiss");
         break;
 
+      case "FocusedCFR::timeout":
+        await this.updateLogWithId(currentId, "timeout", "true");
+        if (message.data == true) {
+          await this.updateLogWithId(currentId, "nevershow", "true");
+          await this.neverShow(currentId);
+        }
+        await this.reportSummary();
+        await this.reportNotificationResult("timeout");
+        break;
+
+
       case "FocusedCFR::action":
-        this.updateLogWithId(currentId, "action", "true");
-        this.action(currentId);
-        this.reportSummary();
-        this.reportNotificationResult("action");
+        await this.updateLogWithId(currentId, "action", "true");
+        await this.action(currentId);
+        await this.reportSummary();
+        await this.reportNotificationResult("action");
         break;
 
       case "FocusedCFR::close":
-        this.updateLogWithId(currentId, "close", "true");
-        this.reportSummary();
-        this.reportNotificationResult("close")
+        await this.updateLogWithId(currentId, "close", "true");
+        if (message.data == true) {
+          await this.updateLogWithId(currentId, "nevershow", "true");
+          await this.neverShow(currentId);
+        }
+        await this.reportSummary();
+        await this.reportNotificationResult("close")
         break;
     }
   }
