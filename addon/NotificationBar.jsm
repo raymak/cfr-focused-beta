@@ -9,6 +9,8 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Console.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
+
 const log = console.log; // Temporary
 
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow", "resource:///modules/RecentWindow.jsm");
@@ -57,7 +59,7 @@ class NotificationBar {
 
     box = win.document.createElement("hbox");
     box.setAttribute("id", "focused-cfr-notificationbar-box");
-    box.setAttribute("style", "height: 76px;");
+    box.style.height = "56px";
 
     const embeddedBrowser = win.document.createElement("browser");
     embeddedBrowser.setAttribute("id", "focused-cfr-notificationbar");
@@ -92,6 +94,11 @@ class NotificationBar {
         box.remove();
       }
     }
+  }
+
+  // makes sure all the async messages are received by Recommender.jsm first
+  killNotificationWithDelay(delay) {
+    setTimeout(this.killNotification, delay);
   }
 
   receiveMessage(message) {

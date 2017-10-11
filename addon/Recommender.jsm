@@ -128,9 +128,8 @@ class Recommender {
   }
 
   test() {
-    (new NotificationBar(recipes["mobile-promo"], this.presentationMessageListener.bind(this))).present();
-
-
+    currentId = "amazon-assistant";
+    (new Doorhanger(recipes[currentId], this.presentationMessageListener.bind(this))).present();
   }
 
   async start() {
@@ -188,7 +187,6 @@ class Recommender {
   }
 
   async reportNotificationResult(result) {
-
     const recomm = await Storage.get(`recomms.${currentId}`);
 
     let data = {

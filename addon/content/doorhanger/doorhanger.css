@@ -11,7 +11,10 @@
 body {
   color: #333333;
   background: transparent;
-  font-family: "FiraSans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 
+    "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", 
+    "Fira Sans", "Droid Sans", "Helvetica Neue", 
+    sans-serif;
    }
 
 /*=====MINIMAL RESETS, ADJUSTMENTS, ETC =====*/
@@ -26,14 +29,6 @@ h1, h2, h3 {
 
 h4, h5, h6 {
   margin-bottom: 1.66em; 
-}
-
-h1, h2 {
-  font-family: "FiraSans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-}
-
-h3, h4, h5, h6 {
-  font-family: 'clear_sansregular';
 }
 
 ul, ol, p {
@@ -493,10 +488,9 @@ input[type=checkbox]:not(old):checked + label > span:before{
 
 .button-style {
   /*font-family: 'Helvetica Neue', Helvetica, sans-serif;*/
-  font-size: 12px;
+  font-size: 14px;
   line-height: 0px;
   display: inline-block;
-  text-align: center;
   cursor: pointer;
   /* font-weight: bold; */
   /*text-shadow: 0px 1px rgba(0, 0, 0, 0.3);*/

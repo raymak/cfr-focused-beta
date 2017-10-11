@@ -9,6 +9,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Console.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 const log = console.log; // Temporary
 
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow", "resource:///modules/RecentWindow.jsm");
@@ -62,7 +63,8 @@ class Doorhanger {
     panel.setAttribute("noautofocus", true);
     panel.setAttribute("noautohide", true);
     panel.setAttribute("level", "parent");
-    panel.setAttribute("style", "height: 204px; width: 354px");
+    panel.style.height = "203px";
+    panel.style.width = "353px";
 
     const embeddedBrowser = win.document.createElement("browser");
     embeddedBrowser.setAttribute("id", "focused-cfr-doorhanger");
@@ -103,6 +105,12 @@ class Doorhanger {
     }
   }
 
+
+  // makes sure all the async messages are received by Recommender.jsm first
+  killNotificationWithDelay(delay) {
+    setTimeout(this.killNotification, delay);
+  }
+
   receiveMessage(message) {
     switch (message.name) {
       case "FocusedCFR::log":
@@ -110,17 +118,17 @@ class Doorhanger {
         break;
 
       case "FocusedCFR::dismiss":
-        this.killNotification();
+        this.killNotificationWithDelay(0);
         this.messageListenerCallback(message);
         break;
 
       case "FocusedCFR::action":
-        this.killNotification();
+        this.killNotificationWithDelay(0);
         this.messageListenerCallback(message);
         break;
 
       case "FocusedCFR::close":
-        this.killNotification();
+        this.killNotificationWithDelay(0);
         this.messageListenerCallback(message);
 
         break;
