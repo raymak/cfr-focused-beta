@@ -58,7 +58,8 @@ class Doorhanger {
 
   show(win) {
     let panel = win.document.getElementById("focused-cfr-doorhanger-panel");
-    const burgerButton = win.document.getElementById("PanelUI-menu-button");
+
+    let popAnchor = this.determineAnchorElement(win);
 
     if (panel !== null) {
       this.killNotification();
@@ -93,10 +94,33 @@ class Doorhanger {
       embeddedBrowser.messageManager.addMessageListener(m, this);
     }
 
-    panel.openPopup(burgerButton, "", 0, 0, false, false);
+    panel.openPopup(popAnchor, "", 0, 0, false, false);
 
     embeddedBrowser.messageManager.sendAsyncMessage("FocusedCFR::load", this.recommRecipe);
+  }
 
+  // temporary workaround
+  determineAnchorElement(win) {
+    let id = this.recommRecipe.id;
+
+    const burgerButton = win.document.getElementById("PanelUI-menu-button");
+    let popAnchor = burgerButton;
+
+    if (id === "pocket") {
+      let pocketButton = win.document.getElementById("pocket-button-box");
+      if (pocketButton && win.getComputedStyle(pocketButton).display !== "none") {
+        popAnchor = pocketButton;
+      }
+    }
+
+    if (id === "amazon-assistant") {
+      let urlBar = win.document.getElementById("urlbar");
+      if (urlBar) {
+        popAnchor = urlBar;
+      }
+    }
+
+    return popAnchor;
   }
 
   killNotification() {

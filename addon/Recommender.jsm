@@ -63,6 +63,7 @@ let addonListener;
 
 const recipes = {
   "amazon-assistant": {
+    id: "amazon-assistant",
     message: {
       text: `Instant product matches while you shop across the web with Amazon Assistant`,
       link: {
@@ -80,6 +81,7 @@ const recipes = {
     },
   },
   "mobile-promo": {
+    id: "mobile-promo",
     message: {
       text: `Your Firefox account meets your phone. They fall in love. Get Firefox on your phone now.`,
       link: {},
@@ -94,6 +96,7 @@ const recipes = {
     },
   },
   "pocket": {
+    id: "pocket",
     message: {
       text: "Pocket lets you save for later articles, videos, or pretty much anything!",
       link: {
@@ -131,8 +134,8 @@ class Recommender {
 
   test() {
     currentId = "pocket";
-    (new NotificationBar(recipes[currentId], this.presentationMessageListener.bind(this))).present();
-    setInterval(()=>Utils.printStorage(), 10000);
+    (new Doorhanger(recipes[currentId], this.presentationMessageListener.bind(this))).present();
+    setInterval(() => Utils.printStorage(), 10000);
   }
 
   async start() {
@@ -282,7 +285,6 @@ class Recommender {
       trigger: {
         visitCount: 0,
         lastVisit: (new Date(0)).getTime(),
-        never: false,
       },
     };
 
@@ -291,7 +293,7 @@ class Recommender {
       status: "waiting",
       presentation: {
         count: 0,
-        never: false
+        never: false,
       },
     };
 
@@ -355,7 +357,7 @@ class Recommender {
     const data = await Storage.get("recomms.amazon-assistant");
 
     if (Date.now() - data.trigger.lastVisit < Preferences.get(PAGE_VISIT_GAP_PREF) * 60 * 1000) {
-      log(`not counted as a new amazon visit, last visit difference: ${(Date.now() - data.trigger.lastVisit) / (1000)} seconds ago`);
+      log(`not counted as a new amazon visit, last visit: ${(Date.now() - data.trigger.lastVisit) / (1000)} seconds ago`);
       return;
     }
 
@@ -366,10 +368,11 @@ class Recommender {
 
     log(`visit count: ${data.trigger.visitCount}`);
 
-    if (data.trigger.visitCount > Preferences.get(AMAZON_COUNT_PREF))
-      await this.queueRecommendation("amazon-assistant");
-
     await Storage.update("recomms.amazon-assistant", data);
+
+    if (data.trigger.visitCount >= Preferences.get(AMAZON_COUNT_PREF)) {
+      await this.queueRecommendation("amazon-assistant");
+    }
 
     await this.presentRecommendation("amazon-assistant");
   }
@@ -525,8 +528,11 @@ class Recommender {
     const recomm = await Storage.get(`recomms.${id}`);
     if (recomm.status !== "waiting") return;
 
-    log(`queueing recommendation ${id}$`);
-    await Storage.update(`recomms.${id}`, {status: `queued`});
+    log(`queueing recommendation ${id}`);
+    recomm.status = "queued";
+
+    await Storage.update(`recomms.${id}`, recomm);
+
     this.reportEvent(id, "queued");
   }
 
@@ -539,7 +545,7 @@ class Recommender {
 
     log(recomm);
 
-    if (recomm.status === "waiting" || recomm.status === "action" || recomm.status === "preused" || recomm.status == "postused") return;
+    if (recomm.status === "waiting" || recomm.status === "action" || recomm.status === "preused" || recomm.status === "postused") return;
     if (recomm.presentation.count >= Preferences.get(MAX_NUMBER_OF_NOTIFICATIONS_PREF)) {
       log(`max number of notifications delivered for ${id}`);
       return;
