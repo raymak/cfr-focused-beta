@@ -46,7 +46,7 @@ const AMAZON_COUNT_PREF = "extensions.focused_cfr_study.amazon_count_threshold";
 const PAGE_VISIT_GAP_PREF = "extensions.focused_cfr_study.page_visit_gap_minutes";
 const DEBUG_MODE_PREF = "extensions.focused_cfr_study.debug_mode";
 
-const POCKET_BOOKMARK_COUNT_TRHESHOLD = 15;
+const POCKET_BOOKMARK_COUNT_TRHESHOLD = 20;
 const AMAZON_VISIT_THRESHOLD = 3;
 
 const AMAZON_LINK = "www.amazon.com/gp/BIT/ref=bit_v2_BDFF1?tagbase=mozilla1";
@@ -54,7 +54,10 @@ const AMAZON_ADDON_ID = "abb@amazon.com";
 
 this.EXPORTED_SYMBOLS = ["Recommender"];
 
-const log = console.log; // Temporary
+const log = function(...args) {
+  if (!Preferences.get(DEBUG_MODE_PREF)) return;
+  console.log(...args);
+};
 
 let bookmarkObserver;
 let currentId;
@@ -124,8 +127,6 @@ function getMostRecentBrowserWindow() {
 
 class Recommender {
   constructor(telemetry, variation) {
-    this.test();
-
     this.telemetry = telemetry;
     this.variation = variation.name;
     this.variationUi = variation.ui;
@@ -133,14 +134,12 @@ class Recommender {
   }
 
   test() {
-    currentId = "pocket";
-    (new Doorhanger(recipes[currentId], this.presentationMessageListener.bind(this))).present();
+    // currentId = "pocket";
+    // (new Doorhanger(recipes[currentId], this.presentationMessageListener.bind(this))).present();
     setInterval(() => Utils.printStorage(), 10000);
   }
 
   async start() {
-    if (Preferences.get(INIT_PREF)) return; // not first run
-
     const isFirstRun = !(await Storage.has("general"));
     if (isFirstRun)
       await this.firstRun();

@@ -16,6 +16,9 @@ const STUDYUTILSPATH = `${__SCRIPT_URI_SPEC__}/../${studyConfig.studyUtilsPath}`
 const { studyUtils } = Cu.import(STUDYUTILSPATH, {});
 
 XPCOMUtils.defineLazyModuleGetter(this, "Recommender", "resource://focused-cfr-shield-study/Recommender.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences", "resource://gre/modules/Preferences.jsm");
+
+const EXPIRATION_DATE_STRING_PREF = "extensions.focused_cfr_study.expiration_date_string";
 
 let recommender;
 
@@ -36,6 +39,12 @@ async function startup(addonData, reason) {
   const variation = await chooseVariation();
   studyUtils.setVariation(variation);
 
+  if (!Preferences.has(EXPIRATION_DATE_STRING_PREF)) {
+    const now = new Date(Date.now());
+    const expirationDateString = new Date(now.setDate(now.getDate() + 14)).toISOString();
+    Preferences.set(EXPIRATION_DATE_STRING_PREF, expirationDateString);
+}
+
   Jsm.import(config.modules);
 
   if ((REASONS[reason]) === "ADDON_INSTALL") {
@@ -50,6 +59,11 @@ async function startup(addonData, reason) {
     }
   }
   await studyUtils.startup({reason});
+
+  const expirationDate = new Date(Preferences.get(EXPIRATION_DATE_STRING_PREF));
+  if (Date.now() > expirationDate) {
+    studyUtils.endStudy({ reason: "expired" });
+  }
 
   console.log(`info ${JSON.stringify(studyUtils.info())}`);
   // if you have code to handle expiration / long-timers, it could go here.
