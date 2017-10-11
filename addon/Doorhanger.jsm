@@ -75,8 +75,14 @@ class Doorhanger {
     panel.setAttribute("noautofocus", true);
     panel.setAttribute("noautohide", true);
     panel.setAttribute("level", "parent");
-    panel.style.height = "183px";
-    panel.style.width = "353px";
+
+    if (Services.appInfo.OS === "Darwin"){
+	    panel.style.height = "183px";
+	    panel.style.width = "353px";
+	} else {
+		panel.style.height = "187px";
+		panel.style.width = "360px";
+	}
 
     const embeddedBrowser = win.document.createElement("browser");
     embeddedBrowser.setAttribute("id", "focused-cfr-doorhanger");

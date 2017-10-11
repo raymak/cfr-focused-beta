@@ -84,7 +84,7 @@ function load(data) {
 
   registerExternalLinks();
 
-  updatePanelSize();
+  // updatePanelSize();
   
   timeoutTimer = content.setTimeout(timeout, 2 * 60 * 1000);
 }
