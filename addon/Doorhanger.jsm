@@ -79,10 +79,10 @@ class Doorhanger {
     if (Services.appinfo.OS === "Darwin"){
 	    panel.style.height = "183px";
 	    panel.style.width = "353px";
-	} else {
-		panel.style.height = "187px";
-		panel.style.width = "360px";
-	}
+	  } else {
+		  panel.style.height = "187px";
+		  panel.style.width = "360px";
+	  }
 
     const embeddedBrowser = win.document.createElement("browser");
     embeddedBrowser.setAttribute("id", "focused-cfr-doorhanger");
