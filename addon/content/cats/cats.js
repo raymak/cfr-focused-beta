@@ -1,5 +1,7 @@
 "use strict";
 
+console.log('loaded Cats.js');
+
 class Cats extends React.Component {
   constructor(props) {
     super(props);
@@ -11,6 +13,5 @@ class Cats extends React.Component {
     );
   }
 }
-
 
 module.exports = Cats;

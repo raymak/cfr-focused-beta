@@ -11,7 +11,7 @@ module.exports = {
     ReactDOM: "./node_modules/react-dom/",
   },
   output: {
-    path: path.resolve(__dirname, "addon/vendor"),
+    path: path.resolve(__dirname, "addon/content/vendor"),
     filename: "[name].js",
     library: "[name]",
     libraryTarget: "this",

@@ -16,12 +16,13 @@ var config = {
   "study": {
     "studyName": "focused-cfr-beta-1", // no spaces, for all the reasons
     "weightedVariations": [
-      {"name": "control",
-        "weight": 1,
-        "ui": "control",
-        "amazon": "control",
-      },
-      {"name": "doorhanger-amazon-low",
+      // {"name": "control",
+      //   "weight": 1,
+      //   "ui": "control",
+      //   "amazon": "control",
+      // },
+      {
+        "name": "doorhanger-amazon-low",
         "weight": 1,
         "ui": "doorhanger",
         "amazon": "low",
@@ -32,18 +33,18 @@ var config = {
         "ui": "doorhanger",
         "amazon": "high",
       },
-      {
-        "name": "bar-amazon-low",
-        "weight": 1,
-        "ui": "bar",
-        "amazon": "low",
-      },
-      {
-        "name": "bar-amazon-high",
-        "weight": 1,
-        "ui": "bar",
-        "amazon": "high",
-      },
+      // {
+      //   "name": "bar-amazon-low",
+      //   "weight": 1,
+      //   "ui": "bar",
+      //   "amazon": "low",
+      // },
+      // {
+      //   "name": "bar-amazon-high",
+      //   "weight": 1,
+      //   "ui": "bar",
+      //   "amazon": "high",
+      // },
     ],
     /** **endings**
       * - keys indicate the 'endStudy' even that opens these.
