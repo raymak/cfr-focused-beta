@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "prebuild": "cp node_modules/shield-studies-addon-utils/dist/StudyUtils.jsm addon/",
-    "build": "XPI_STATIC_NAME=focused-cfr.xpi bash ./bin/xpi.sh",
+    "build": "webpack --config ./webpack.config.js && XPI_STATIC_NAME=focused-cfr.xpi bash ./bin/xpi.sh",
     "firefox": "export XPI_NAME=dist/focused-cfr.xpi FIREFOX_BINARY=/Applications/FirefoxNightly.app/Contents/MacOS/firefox-bin && npm run build && node manual_test.js",
     "eslint": "eslint addon --ext jsm --ext js --ext json --",
     "watch": "onchange 'addon/**' 'package.json' 'template/**' -e addon/install.rdf -e addon/chrome.manifest -e addon/StudyUtils.jsm -- npm run build -- '{{event}} {{changed}} $(date)'"
@@ -21,9 +21,11 @@
     "eslint-plugin-json": "^1.2.0",
     "eslint-plugin-mozilla": "^0.3.2",
     "jshint": "^2.9.5",
+    "license-webpack-plugin": "^1.1.0",
     "moustache": "0.0.2",
     "onchange": "^3.2.1",
-    "shield-studies-addon-utils": "^4.0.0"
+    "shield-studies-addon-utils": "^4.0.0",
+    "webpack": "^3.7.1"
   },
   "addon": {
     "version": "1.0.1",
@@ -37,5 +39,8 @@
     "description": "Shield-powered Contextual Feature Recommender Study. For more info visit http://github.com/raymak/cfr-focused-beta.",
     "chrome": "focused-cfr-shield-study"
   },
-  "dependencies": {}
+  "dependencies": {
+    "react": "^16.0.0",
+    "react-dom": "^16.0.0"
+  }
 }
