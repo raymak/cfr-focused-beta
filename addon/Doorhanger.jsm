@@ -60,6 +60,7 @@ class Doorhanger {
   }
 
   show(win) {
+
     panel = win.document.getElementById("focused-cfr-doorhanger-panel");
 
     const popAnchor = this.determineAnchorElement(win);
@@ -76,7 +77,7 @@ class Doorhanger {
     panel.setAttribute("noautohide", true);
     panel.setAttribute("level", "parent");
 
-    if (Services.appinfo.OS === "Darwin"){
+    if (Services.appinfo.OS === "Darwin") {
 	    panel.style.height = "183px";
 	    panel.style.width = "353px";
 	  } else {
@@ -100,7 +101,7 @@ class Doorhanger {
     embeddedBrowser.messageManager.loadFrameScript(FRAME_SCRIPT, false);
     embeddedBrowser.messageManager.loadFrameScript(`resource://focused-cfr-shield-study-content/vendor/React.js?${Math.random()}`, false);
     embeddedBrowser.messageManager.loadFrameScript(`resource://focused-cfr-shield-study-content/vendor/ReactDOM.js?${Math.random()}`, false);
-    embeddedBrowser.messageManager.loadFrameScript(`resource://focused-cfr-shield-study-content/cats/app.js?${Math.random()}`, false);
+    embeddedBrowser.messageManager.loadFrameScript(`resource://focused-cfr-shield-study-content/cats/UI.js?${Math.random()}`, false);
 
     for (const m of MESSAGES) {
       embeddedBrowser.messageManager.addMessageListener(m, this);

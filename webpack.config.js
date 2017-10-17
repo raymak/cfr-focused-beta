@@ -4,7 +4,22 @@ var webpack = require("webpack");
 var ConcatSource = require("webpack-sources").ConcatSource;
 var LicenseWebpackPlugin = require("license-webpack-plugin").LicenseWebpackPlugin;
 
-module.exports = {
+const bundleConfig = {
+  context: __dirname,
+  entry: "./addon/content/cats/app.jsx",
+  output: {
+    path: path.resolve(__dirname, "addon/content/cats"),
+    filename: "UI.js",
+  },
+  module: {
+    loaders: [
+      { test: /\.js$/, loader: "babel-loader", include: __dirname + "/addon/content/cats" },
+      { test: /\.jsx$/, loader: "babel-loader",  include: __dirname + "/addon/content/cats" },
+    ],
+  },
+};
+
+const libConfig = {
   context: __dirname,
   entry: {
     React: "./node_modules/react/",
@@ -46,3 +61,8 @@ module.exports = {
     }),
   ],
 };
+
+module.exports = [
+  bundleConfig,
+  libConfig,
+];

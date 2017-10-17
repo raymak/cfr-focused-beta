@@ -1,3 +1,5 @@
+import Cats from "./cats.jsx";
+
 "use strict";
 
 /* global React ReactDOM require content addMessageListener sendAsyncMessage */
@@ -20,18 +22,6 @@ const self = {
 
 const sanitizeHtml = (m) => { return m; }; // disabling the sanitization. not needed. only text from the code is sent.
 
-class Cats extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-
-  render() {
-    return (
-      React.createElement("p", {}, "I love cats")
-    );
-  }
-}
-
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -39,7 +29,7 @@ class App extends React.Component {
 
   render() {
     return (
-      React.createElement(Cats)
+      <Cats />
     );
   }
 }
