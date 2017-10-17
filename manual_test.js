@@ -11,6 +11,9 @@
 console.log("Starting up firefox");
 const utils = require("./test/utils");
 const firefox = require("selenium-webdriver/firefox");
+const webdriver = require("selenium-webdriver");
+const Key = webdriver.Key;
+const By = webdriver.By;
 
 const Context = firefox.Context;
 
@@ -20,29 +23,21 @@ const Context = firefox.Context;
 
     console.log("Starting up firefox");
 
-    //* // add the share-button to the toolbar
-    //* await utils.addShareButton(driver);
-    //* // set the treatment
-    //* await driver.executeAsyncScript((typeArg, callback) => {
-    //*   Components.utils.import("resource://gre/modules/Preferences.jsm");
-    //*   if (typeArg !== null) {
-    //*     Preferences.set("extensions.sharebuttonstudy.treatment", typeArg);
-    //*   }
-    //*   callback();
-    //* }, "doorhangerAskToAdd");
-
     // install the addon
     await utils.installAddon(driver);
     console.log("Load temporary addon.");
 
 
-    // navigate to a regular page
-    //* driver.setContext(Context.CONTENT);
-    //* await driver.get("http://github.com/mozilla");
-    // driver.setContext(Context.CHROME);
+    // navigate to about:config and get study prefs
+    driver.setContext(Context.CONTENT);
+    await driver.get("about:config");
+    const aboutConfigTextbox = driver.findElement(By.id("textbox"));
+    const findStudyPrefs = "cfr";
+    await aboutConfigTextbox.sendKeys(findStudyPrefs);
+    await aboutConfigTextbox.sendKeys(Key.RETURN);
 
+    driver.setContext(Context.CHROME);
 
-    //* await utils.copyUrlBar(driver);
   } catch (e) {
     console.error(e); // eslint-disable-line no-console
   }
