@@ -1,4 +1,6 @@
+
 import Cats from "./cats.jsx";
+import ButtonWithDropdown from "./ButtonWithDropdown.jsx";
 
 "use strict";
 
@@ -29,7 +31,45 @@ class App extends React.Component {
 
   render() {
     return (
-      <Cats />
+      <div>
+        <Cats />
+        {/*<ButtonWithDropdown />*/}
+        <select>
+          <option>
+            doobee
+          </option>
+          <option>
+            doobee
+          </option>
+          <option>
+            doobee
+          </option>
+          <option>
+            doobee
+          </option>
+          <option>
+            doobee
+          </option>
+          <option>
+            doobee
+          </option>
+          <option>
+            doobee
+          </option>
+          <option>
+            doobee
+          </option>
+          <option>
+            doobee
+          </option>
+          <option>
+            doobee
+          </option>
+          <option>
+            doobee
+          </option>
+        </select>
+      </div>
     );
   }
 }

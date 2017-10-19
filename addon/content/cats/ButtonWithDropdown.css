@@ -1,0 +1,40 @@
+/* <ButtonWithDropdown /> */
+
+.secondary-button-wrapper {
+  display: grid;
+  grid-template-columns: 1fr auto;
+}
+
+.secondary-button {
+  background-color: var(--reject-button-background-color);
+  border-right-color: rgba(0, 0, 0, .2);
+}
+
+.secondary-button:hover, .dropdown-icon-wrapper:hover {
+  background-color: var(--reject-button-hover-background-color);
+}
+
+.dropdown-icon-wrapper {
+  position: relative;
+  margin: 0;
+  /* From: resource://gre-resources/forms.css in Firefox URL bar*/
+  border: 2px outset ThreeDLightShadow;
+  border-left-width: 0;
+  align-self: stretch;
+  background-color: var(--reject-button-background-color);
+}
+
+.dropdown-icon-wrapper:active {
+  border-style: inset;
+}
+
+.dropdown-icon-wrapper::after {
+  content: "";
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 10px;
+  height: 10px;
+  background-size: contain;
+  background-image: url(./img/down-arrow.svg);
+}
