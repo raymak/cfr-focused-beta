@@ -3,3 +3,5 @@ install.rdf
 *.xpi
 addon/StudyUtils.jsm
 node_modules
+addon/content/vendor/
+addon/content/cats/UI.js

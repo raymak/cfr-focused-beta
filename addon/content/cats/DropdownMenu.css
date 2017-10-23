@@ -1,0 +1,59 @@
+/* <DropdownMenu /> */
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translate(-50%, 15px);
+  min-width: 200px;
+  visibility: visible;
+  margin: 0 auto;
+  opacity: 1;
+  transition: opacity 0.5s;
+  flex-flow: column wrap;
+  padding: 0;
+  margin: 0;
+  text-align: start;
+  list-style: none;
+  box-shadow: var(--dropdown-box-shadow);
+}
+
+.dropdown::before {
+  position: absolute;
+  left: 50%;
+  top: 0%;
+  transform: translate(-50%, -10px);
+  width: 0;
+  height: 0;
+  content:'';
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid var(--reject-button-background-color);
+}
+
+.dropdown-item {
+  padding: 10px;
+  /*replace line below with this after testing: border-bottom: 1px solid var(--primary-border-color);*/
+  border: 1px solid black;
+  background-color: var(--reject-button-background-color);
+  transition: background-color 0.5s;
+}
+
+/*re-add after testing .dropdown-item:last-child {
+  border: 0;
+}*/
+
+.dropdown-item:hover {
+  background-color: var(--reject-button-hover-background-color);
+}
+
+/* TODO bdanforth: put .hidden in the global styles stylesheet once stylesheets are concatenated */
+.hidden {
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0s linear 0.5s, opacity 0.5s;
+}
+
+.button.hidden {
+  display: none;
+}
