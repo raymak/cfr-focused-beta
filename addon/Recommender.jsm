@@ -47,7 +47,7 @@ const PAGE_VISIT_GAP_PREF = "extensions.focused_cfr_study.page_visit_gap_minutes
 const DEBUG_MODE_PREF = "extensions.focused_cfr_study.debug_mode";
 
 const POCKET_BOOKMARK_COUNT_TRHESHOLD = 20;
-const AMAZON_VISIT_THRESHOLD = 3;
+const AMAZON_VISIT_THRESHOLD = 1;
 
 const AMAZON_LINK = "www.amazon.com/gp/BIT/ref=bit_v2_BDFF1?tagbase=mozilla1";
 const AMAZON_ADDON_ID = "abb@amazon.com";
@@ -173,7 +173,7 @@ class Recommender {
     if (this.variationAmazon === "high")
       Preferences.set(AMAZON_COUNT_PREF, AMAZON_VISIT_THRESHOLD);
     else
-      Preferences.set(AMAZON_COUNT_PREF, AMAZON_VISIT_THRESHOLD * 2);
+      Preferences.set(AMAZON_COUNT_PREF, AMAZON_VISIT_THRESHOLD/* 2*/);
     Preferences.set(PAGE_VISIT_GAP_PREF, PAGE_VISIT_GAP_MINUTES);
     Preferences.set(DEBUG_MODE_PREF, false);
 

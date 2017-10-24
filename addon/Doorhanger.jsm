@@ -76,7 +76,7 @@ class Doorhanger {
     panel.setAttribute("noautohide", true);
     panel.setAttribute("level", "parent");
 
-    if (Services.appinfo.OS === "Darwin"){
+    if (Services.appinfo.OS === "Darwin") {
 	    panel.style.height = "183px";
 	    panel.style.width = "353px";
 	  } else {
@@ -84,28 +84,28 @@ class Doorhanger {
 		  panel.style.width = "360px";
 	  }
 
-    const embeddedBrowser = win.document.createElement("browser");
-    embeddedBrowser.setAttribute("id", "focused-cfr-doorhanger");
-    embeddedBrowser.setAttribute("src", "resource://focused-cfr-shield-study-content/doorhanger/doorhanger.html");
-    embeddedBrowser.setAttribute("type", "content");
-    embeddedBrowser.setAttribute("disableglobalhistory", "true");
-    embeddedBrowser.setAttribute("flex", "1");
+    // const embeddedBrowser = win.document.createElement("browser");
+    // embeddedBrowser.setAttribute("id", "focused-cfr-doorhanger");
+    // embeddedBrowser.setAttribute("src", "chrome://panel/content/panel.xul");
+    // embeddedBrowser.setAttribute("type", "content");
+    // embeddedBrowser.setAttribute("disableglobalhistory", "true");
+    // embeddedBrowser.setAttribute("flex", "1");
 
-    panel.appendChild(embeddedBrowser);
+    // panel.appendChild(embeddedBrowser);
     win.document.getElementById("mainPopupSet").appendChild(panel);
 
     win.document.getAnonymousElementByAttribute(panel, "class", "panel-arrowcontent").setAttribute("style", "padding: 0px;");
 
     // seems that messageManager only available when browser is attached
-    embeddedBrowser.messageManager.loadFrameScript(FRAME_SCRIPT, false);
+    // embeddedBrowser.messageManager.loadFrameScript(FRAME_SCRIPT, false);
 
-    for (const m of MESSAGES) {
-      embeddedBrowser.messageManager.addMessageListener(m, this);
-    }
+    // for (const m of MESSAGES) {
+    //   embeddedBrowser.messageManager.addMessageListener(m, this);
+    // }
 
     panel.openPopup(popAnchor, "", 0, 0, false, false);
 
-    embeddedBrowser.messageManager.sendAsyncMessage("FocusedCFR::load", this.recommRecipe);
+    // embeddedBrowser.messageManager.sendAsyncMessage("FocusedCFR::load", this.recommRecipe);
   }
 
   // temporary workaround
