@@ -40,7 +40,6 @@
 <popupset>
   <menupopup
     id="clipmenu"
-    position="before_end"
   >
     <menuitem label="Cut"/>
     <menuitem label="Copy"/>
