@@ -10,6 +10,7 @@ Cu.import("resource://gre/modules/Console.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://gre/modules/PopupNotifications.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow", "resource:///modules/RecentWindow.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences", "resource://gre/modules/Preferences.jsm");
@@ -37,9 +38,9 @@ this.EXPORTED_SYMBOLS = ["Doorhanger"];
 
 // Due to bug 1051238 frame scripts are cached forever, so we can't update them
 // as a restartless add-on. The Math.random() is the work around for this.
-const FRAME_SCRIPT = (
-  `resource://focused-cfr-shield-study-content/doorhanger/doorhanger.js?${Math.random()}`
-);
+// const FRAME_SCRIPT = (
+//   `resource://focused-cfr-shield-study-content/doorhanger/doorhanger.js?${Math.random()}`
+// );
 
 function getMostRecentBrowserWindow() {
   return RecentWindow.getMostRecentBrowserWindow({
@@ -60,52 +61,73 @@ class Doorhanger {
   }
 
   show(win) {
-    panel = win.document.getElementById("focused-cfr-doorhanger-panel");
-
+    // panel = win.document.getElementById("focused-cfr-doorhanger-panel");
+    console.log("showing popup");
     const popAnchor = this.determineAnchorElement(win);
+    
+    console.log("here's the popAnchor", popAnchor);
 
-    if (panel !== null) {
-      this.killNotification();
-    }
+    console.log(PopupNotifications);
+    console.log(win);
+    console.log(win.gBrowser);
+    console.log(win.gBrowser.selectedBrowser);
 
-    panel = win.document.createElement("panel");
-    panel.setAttribute("id", "focused-cfr-doorhanger-panel");
-    panel.setAttribute("class", "no-padding-panel");
-    panel.setAttribute("type", "arrow");
-    panel.setAttribute("noautofocus", true);
-    panel.setAttribute("noautohide", true);
-    panel.setAttribute("level", "parent");
+    let popup = PopupNotifications.show(
+      win.gBrowser.selectedBrowser,
+      "sample-popup",
+      "This is a sample popup notification.",
+      popAnchor,
+      {
+        label: "Do Something",
+        accessKey: "D",
+        callback: function(obj) {
+          alert("Doing something awesome!");
+        },
+      }
+    );
 
-    if (Services.appinfo.OS === "Darwin"){
-	    panel.style.height = "183px";
-	    panel.style.width = "353px";
-	  } else {
-		  panel.style.height = "187px";
-		  panel.style.width = "360px";
-	  }
+   //  if (panel !== null) {
+   //    this.killNotification();
+   //  }
 
-    const embeddedBrowser = win.document.createElement("browser");
-    embeddedBrowser.setAttribute("id", "focused-cfr-doorhanger");
-    embeddedBrowser.setAttribute("src", "resource://focused-cfr-shield-study-content/doorhanger/doorhanger.html");
-    embeddedBrowser.setAttribute("type", "content");
-    embeddedBrowser.setAttribute("disableglobalhistory", "true");
-    embeddedBrowser.setAttribute("flex", "1");
+   //  panel = win.document.createElement("panel");
+   //  panel.setAttribute("id", "focused-cfr-doorhanger-panel");
+   //  panel.setAttribute("class", "no-padding-panel");
+   //  panel.setAttribute("type", "arrow");
+   //  panel.setAttribute("noautofocus", true);
+   //  panel.setAttribute("noautohide", true);
+   //  panel.setAttribute("level", "parent");
 
-    panel.appendChild(embeddedBrowser);
-    win.document.getElementById("mainPopupSet").appendChild(panel);
+   //  if (Services.appinfo.OS === "Darwin") {
+	  //   panel.style.height = "183px";
+	  //   panel.style.width = "353px";
+	  // } else {
+		 //  panel.style.height = "187px";
+		 //  panel.style.width = "360px";
+	  // }
 
-    win.document.getAnonymousElementByAttribute(panel, "class", "panel-arrowcontent").setAttribute("style", "padding: 0px;");
+    // const embeddedBrowser = win.document.createElement("browser");
+    // embeddedBrowser.setAttribute("id", "focused-cfr-doorhanger");
+    // embeddedBrowser.setAttribute("src", "chrome://panel/content/panel.xul");
+    // embeddedBrowser.setAttribute("type", "content");
+    // embeddedBrowser.setAttribute("disableglobalhistory", "true");
+    // embeddedBrowser.setAttribute("flex", "1");
+
+    // panel.appendChild(embeddedBrowser);
+    // win.document.getElementById("mainPopupSet").appendChild(panel);
+
+    // win.document.getAnonymousElementByAttribute(panel, "class", "panel-arrowcontent").setAttribute("style", "padding: 0px;");
 
     // seems that messageManager only available when browser is attached
-    embeddedBrowser.messageManager.loadFrameScript(FRAME_SCRIPT, false);
+    // embeddedBrowser.messageManager.loadFrameScript(FRAME_SCRIPT, false);
 
-    for (const m of MESSAGES) {
-      embeddedBrowser.messageManager.addMessageListener(m, this);
-    }
+    // for (const m of MESSAGES) {
+    //   embeddedBrowser.messageManager.addMessageListener(m, this);
+    // }
 
-    panel.openPopup(popAnchor, "", 0, 0, false, false);
+    // panel.openPopup(popAnchor, "", 0, 0, false, false);
 
-    embeddedBrowser.messageManager.sendAsyncMessage("FocusedCFR::load", this.recommRecipe);
+    // embeddedBrowser.messageManager.sendAsyncMessage("FocusedCFR::load", this.recommRecipe);
   }
 
   // temporary workaround
